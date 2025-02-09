@@ -1,0 +1,336 @@
+/* Variables */
+:root {
+    --primary-color: #007AFF;
+    --secondary-color: #5856D6;
+    --background-color: #F2F2F7;
+    --text-color: #1C1C1E;
+    --nav-height: 4rem;  /* 64px */
+}
+
+/* Reset and base styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* App Container */
+.app-container {
+    position: relative;
+    min-height: 100vh;
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+.main-content {
+    min-height: 100vh;
+}
+
+/* Search styles */
+.search-container {
+    padding: 1rem;
+    background: white;
+    margin: 1rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 2px 0.5rem rgba(0,0,0,0.1);
+}
+
+.search-input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #E5E5EA;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+.search-button {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+/* Screen styles */
+.screen {
+    display: none;
+    padding: 1rem;
+}
+
+.screen.active {
+    display: block;
+}
+
+/* Movies Grid */
+.movies-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(8.75rem, 1fr));
+    gap: 1rem;
+    padding: 1rem;
+}
+
+/* Navigation Styles */
+.nav {
+    background: white;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    box-shadow: 0 2px 0.625rem rgba(0,0,0,0.1);
+    z-index: 1000;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: var(--text-color);
+    padding: 0.5rem;
+    position: relative;
+}
+
+.nav-item.active {
+    color: var(--primary-color);
+}
+
+.nav-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+/* Play button specific styles */
+.nav-item-play {
+    margin-top: -1.875rem;
+}
+
+.play-button-circle {
+    width: 3.5rem;
+    height: 3.5rem;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0.25rem 0.625rem rgba(0,0,0,0.2);
+}
+
+.nav-item-play .nav-icon {
+    width: 1.75rem;
+    height: 1.75rem;
+    color: white;
+}
+
+/* Mobile styles (up to 40rem) */
+@media screen and (max-width: 40rem) {
+    .main-content {
+        padding-bottom: var(--nav-height);
+    }
+
+    .nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: var(--nav-height);
+        padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .nav-item {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .nav-icon {
+        margin-bottom: 0.25rem;
+    }
+
+    .nav-item span {
+        font-size: 0.75rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+        margin: 1rem;
+    }
+
+    .search-container {
+        margin: 0.5rem;
+    }
+
+    .movies-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+        padding: 0.5rem;
+    }
+
+    .nav-item-play {
+        margin-top: -1.25rem;
+    }
+
+    .play-button-circle {
+        margin-bottom: 0.5rem;
+    }
+}
+
+/* Tablet styles */
+@media screen and (min-width: 40.1rem) and (max-width: 60rem) {
+    .main-content {
+        padding-top: var(--nav-height);
+    }
+
+    .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--nav-height);
+    }
+
+    .nav-item {
+        flex-direction: row;
+    }
+
+    .nav-icon {
+        margin-right: 0.5rem;
+    }
+
+    .nav-item-play {
+        margin-top: 0;
+    }
+
+    .play-button-circle {
+        margin-right: 0.5rem;
+    }
+
+    .app-container {
+        max-width: 90%;
+        margin: 0 auto;
+    }
+
+    .movies-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+    }
+
+    h1 {
+        font-size: 1.75rem;
+        text-align: center;
+        margin: 1.25rem 0;
+    }
+}
+
+/* Desktop styles (above 60rem) */
+@media screen and (min-width: 60.1rem) {
+    .main-content {
+        padding-top: var(--nav-height);
+    }
+
+    .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--nav-height);
+        padding: 0 1.5rem;
+    }
+
+    .nav-item {
+        flex-direction: row;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .nav-icon {
+        margin-right: 0.5rem;
+    }
+
+    .nav-item span {
+        font-size: 1rem;
+    }
+
+    .nav-item-play {
+        margin-top: 0;
+    }
+
+    .play-button-circle {
+        margin-right: 0.5rem;
+    }
+
+    .app-container {
+        max-width: 75rem;
+        margin: 0 auto;
+    }
+
+    .movies-grid {
+        grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+        gap: 1.5rem;
+        padding: 1.5rem;
+    }
+
+    .search-container {
+        max-width: 37.5rem;
+        margin: 1.5rem auto;
+    }
+
+    h1 {
+        font-size: 2rem;
+        text-align: center;
+        margin: 1.5rem 0;
+    }
+}
+
+/* Movie Card Styles */
+.movie-card {
+    background: white;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    box-shadow: 0 2px 0.5rem rgba(0,0,0,0.1);
+}
+
+.movie-card img {
+    width: 100%;
+    aspect-ratio: 2/3;
+    object-fit: cover;
+}
+
+.movie-card-content {
+    padding: 0.75rem;
+}
+
+.movie-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.movie-info {
+    font-size: 0.875rem;
+    color: #666;
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    border: none;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-secondary {
+    background-color: var(--secondary-color);
+    color: white;
+}

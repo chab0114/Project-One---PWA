@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Rental App</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Navigation Bar -->
+<nav class="nav">
+    <a href="#" class="nav-item active">
+        <i class="nav-icon home-icon"></i>
+        <span>Home</span>
+    </a>
+    <a href="#" class="nav-item">
+        <i class="nav-icon search-icon"></i>
+        <span>Search</span>
+    </a>
+    <a href="#" class="nav-item nav-item-play">
+        <div class="play-button-circle">
+            <svg width="87" height="86" viewBox="0 0 87 86" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="22" y="21.5" width="43" height="43" rx="21.5" stroke="#338DFF" stroke-width="43"/>
+                <rect x="6.5" y="6" width="74" height="74" rx="37" fill="#FFD700"/>
+                <path d="M43.5 31C41.1266 31 38.8066 31.7038 36.8332 33.0224C34.8598 34.3409 33.3217 36.2151 32.4135 38.4078C31.5052 40.6005 31.2676 43.0133 31.7306 45.3411C32.1936 47.6689 33.3365 49.807 35.0147 51.4853C36.693 53.1635 38.8311 54.3064 41.1589 54.7694C43.4867 55.2324 45.8995 54.9948 48.0922 54.0865C50.2849 53.1783 52.1591 51.6402 53.4776 49.6668C54.7962 47.6934 55.5 45.3734 55.5 43C55.4966 39.8184 54.2313 36.7681 51.9816 34.5184C49.7319 32.2687 46.6816 31.0034 43.5 31ZM43.5 53.1538C41.4918 53.1538 39.5286 52.5583 37.8588 51.4426C36.189 50.3269 34.8876 48.7411 34.1191 46.8857C33.3506 45.0303 33.1495 42.9887 33.5413 41.0191C33.9331 39.0494 34.9001 37.2402 36.3202 35.8201C37.7402 34.4001 39.5494 33.433 41.5191 33.0413C43.4887 32.6495 45.5303 32.8505 47.3857 33.6191C49.2411 34.3876 50.8269 35.689 51.9426 37.3588C53.0583 39.0286 53.6538 40.9918 53.6538 43C53.6508 45.692 52.58 48.2729 50.6765 50.1765C48.7729 52.08 46.192 53.1508 43.5 53.1538ZM49.0662 42.2177L41.6815 37.6023C41.5418 37.515 41.3813 37.4667 41.2167 37.4623C41.052 37.458 40.8891 37.4978 40.745 37.5776C40.6009 37.6574 40.4808 37.7744 40.3971 37.9163C40.3135 38.0582 40.2693 38.2199 40.2692 38.3846V47.6154C40.2693 47.7801 40.3135 47.9418 40.3971 48.0837C40.4808 48.2256 40.6009 48.3426 40.745 48.4224C40.8891 48.5022 41.052 48.542 41.2167 48.5377C41.3813 48.5333 41.5418 48.485 41.6815 48.3977L49.0662 43.7823C49.1987 43.6993 49.308 43.5839 49.3838 43.4471C49.4595 43.3103 49.4993 43.1564 49.4993 43C49.4993 42.8436 49.4595 42.6897 49.3838 42.5529C49.308 42.4161 49.1987 42.3007 49.0662 42.2177ZM42.1154 45.9504V40.0496L46.8358 43L42.1154 45.9504Z" fill="#0069DB"/>
+            </svg>
+        </div>
+        <span>View</span>
+    </a>
+    <a href="#" class="nav-item">
+        <i class="nav-icon cart-icon"></i>
+        <span>Cart</span>
+    </a>
+    <a href="#" class="nav-item">
+        <i class="nav-icon rented-icon"></i>
+        <span>Rented</span>
+    </a>
+</nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Home Screen -->
+            <div class="screen home-screen active">
+                <h1>Welcome to MovieRent</h1>
+                <div class="search-container">
+                    <input type="text" class="search-input" placeholder="Search movies...">
+                    <button class="search-button">Search</button>
+                </div>
+                <div class="movies-grid">
+                    <!-- Example of a movie card -->
+                    <div class="movie-card">
+                        <img src="placeholder.jpg" alt="Movie Title">
+                        <div class="movie-card-content">
+                            <h3 class="movie-title">Movie Title</h3>
+                            <p class="movie-info">2024 • Action</p>
+                            <button class="btn btn-primary">Add to Cart</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Other screens -->
+            <div class="screen search-screen">
+                <!-- Search results content -->
+            </div>
+
+            <div class="screen cart-screen">
+                <!-- Cart content -->
+            </div>
+
+            <div class="screen rented-screen">
+                <!-- Rented movies content -->
+            </div>
+        </main>
+    </div>
+</body>
+</html>
