@@ -51,10 +51,13 @@
         <!-- Main Content Area -->
         <main class="main-content">
             <!-- Home Screen -->
-            <div class="screen home-screen active">
-                <div class="search-container">
-                    <input type="text" class="search-input" placeholder="Search movies...">
-                </div>
+            <div class="search-container">
+                <form class="search-form" role="search">
+                    <input type="search" placeholder="Search movies..." aria-label="Search">
+                    <button type="submit" aria-label="Submit search">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </form>
             </div>
 
             <!-- Search Screen -->
@@ -62,7 +65,7 @@
                 <div class="search-results">
                     <!-- Example of a search card -->
                     <div class="search-card">
-                        <img src="placeholder.jpg" alt="Movie Title" class="search-card-image">
+                        <img src="assets/images/placeholder.jpg" alt="Movie Title" class="search-card-image">
                         <div class="search-card-content">
                             <div>
                                 <h3 class="movie-title">Movie Title</h3>
@@ -81,7 +84,7 @@
                     <!-- Example of a cart card -->
                     <div class="cart-card">
                         <div class="cart-card-image-container">
-                            <img src="placeholder.jpg" alt="Movie Title" class="cart-card-image">
+                            <img src="assets/images/placeholder.jpg" alt="Movie Title" class="cart-card-image">
                             <h3 class="cart-card-title">Movie Title</h3>
                         </div>
                         <div class="cart-card-content">
@@ -108,7 +111,7 @@
                     <!-- Example of a rented card -->
                     <div class="rented-card">
                         <div class="rented-card-image-container">
-                            <img src="placeholder.jpg" alt="Movie Title" class="rented-card-image">
+                            <img src="assets/images/placeholder.jpg" alt="Movie Title" class="rented-card-image">
                             <h3 class="rented-card-title">Movie Title</h3>
                         </div>
                         <div class="rented-card-content">
