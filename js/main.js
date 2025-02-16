@@ -29,6 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const cartCount = document.querySelector('.cart-icon').nextElementSibling;
 
+    const cartScreen = document.querySelector('.cart-screen');
+    const cartItems = document.querySelector('.cart-items');
+    const cartLink = document.querySelector('a[href="#"].nav-item .cart-icon').parentElement;
     console.log('Search form found:', searchForm !== null);
     console.log('Search input found:', searchInput !== null);
     console.log('Results container found:', searchResults !== null);
@@ -166,6 +169,64 @@ document.addEventListener('DOMContentLoaded', () => {
     function updateCartCount(count) {
         cartCount.textContent = count || '';
     }
+
+    async function loadCartItems() {
+        try {
+            const cache = await caches.open(CACHE_NAMES.cart);
+            const response = await cache.match('cart-items');
+            const cartItems = response ? await response.json() : [];
+            
+            console.log('Loading cart items:', cartItems);
+            displayCartItems(cartItems);
+        } catch (error) {
+            console.error('Failed to load cart items:', error);
+        }
+    }
+    
+    
+    function displayCartItems(items) {
+        if (!items || items.length === 0) {
+            cartItems.innerHTML = '<p>Your cart is empty</p>';
+            return;
+        }
+    
+        const cartCards = items.map(movie => `
+            <div class="cart-card" data-movie-id="${movie.id}">
+                <div class="cart-card-image-container">
+                    <img 
+                        src="${movie.poster_path 
+                            ? IMAGE_BASE_URL + movie.poster_path 
+                            : 'assets/images/placeholder.jpg'}" 
+                        alt="${movie.title}" 
+                        class="cart-card-image"
+                    >
+                    <h3 class="cart-card-title">${movie.title}</h3>
+                </div>
+                <div class="cart-card-content">
+                    <p class="movie-year">Released: ${movie.release_date?.split('-')[0] || 'N/A'}</p>
+                    <div class="movie-rating">★ ${movie.vote_average?.toFixed(1) || 'N/A'}</div>
+                    <div class="cart-card-buttons">
+                        <button class="btn btn-primary rent-btn">Rent</button>
+                        <button class="btn btn-secondary remove-btn">Remove</button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    
+        cartItems.innerHTML = cartCards;
+    }
+
+    cartLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+        cartScreen.classList.add('active');
+        loadCartItems();
+    });
     
 });
+
+
+
+
+
 
