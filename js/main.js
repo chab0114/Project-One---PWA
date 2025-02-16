@@ -26,8 +26,17 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Search input found:', searchInput !== null);
     console.log('Results container found:', searchResults !== null);
 
+    function showLoading() {
+        searchResults.innerHTML = `
+            <div class="loading-message">
+                <p>Searching for movies...</p>
+            </div>
+        `;
+    }
+
     async function searchMovies(query) {
         console.log('Searching for:', query); 
+        showLoading();
         try {
             const url = `${BASE_URL}${SEARCH_ENDPOINT}?api_key=${API_KEY}&query=${encodeURIComponent(query)}`;
             console.log('Making request to:', url); 
@@ -53,8 +62,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         console.log('Display movies:', movies);
-
-        const movieCards = movies.map(movies => `
+    
+        const movieCards = movies.map(movie => `
             <div class="search-card" data-movie-id="${movie.id}">
                 <img 
                     src="${movie.poster_path 
@@ -73,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `).join('');
-
+    
         searchResults.innerHTML = movieCards;
     }
 
@@ -86,3 +95,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
