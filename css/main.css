@@ -153,7 +153,6 @@ body {
 }
 
 /* Search Container */
-/* Add to your main.css */
 .search-form {
   display: flex;
   align-items: center;
@@ -336,11 +335,6 @@ body {
 }
 
 /* Cart specific button styles */
-.cart-card-buttons {
-  display: flex;
-  gap: 1rem;
-}
-
 .cart-card-buttons .btn {
   flex: 1;
 }
@@ -383,10 +377,6 @@ body {
 
   .logo {
     display: none;
-  }
-
-  .search-container {
-    margin: 0.5rem;
   }
 
   .search-card {
