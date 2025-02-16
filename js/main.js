@@ -34,14 +34,30 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    function showError(message) {
+        searchResults.innerHTML = `
+            <div class="error-message">
+                <p>${message}</p>
+            </div>
+        `;
+    }
+
     async function searchMovies(query) {
         console.log('Searching for:', query); 
         showLoading();
         try {
+            if (!navigator.onLine) {
+                showError('You are offline. Please check your internet connection.');
+                return;
+            }
             const url = `${BASE_URL}${SEARCH_ENDPOINT}?api_key=${API_KEY}&query=${encodeURIComponent(query)}`;
             console.log('Making request to:', url); 
             
             const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
             console.log('Search results:', data);
             if (data && data.results) {
@@ -55,6 +71,20 @@ document.addEventListener('DOMContentLoaded', () => {
             
         }
     }
+
+    searchInput.addEventListener('keyup', (e) =>{
+        if (searchInput.value.trim() === '') {
+            searchResults.innerHTML = '';
+            return;
+        }
+
+        if (e.key === 'Enter') {
+            const query = searchInput.value.trim();
+            if (query) {
+                searchMovies(query);
+            }
+        }
+    });
 
     function displayResults(movies) {
         if (!movies || movies.length === 0) {
