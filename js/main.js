@@ -2,6 +2,11 @@ const API_KEY = '3e7d5c5d91edd8eae1fcac9b14f3b548';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const SEARCH_ENDPOINT = '/search/movie';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+const CACHE_NAMES = {
+    cart: 'cart-items-v1',
+    movies: 'movies-cache-v1'
+};
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const searchForm = document.querySelector('.search-form');
@@ -21,6 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Could not find search result');
         return;
     }
+
+    const cartCount = document.querySelector('.cart-icon').nextElementSibling;
 
     console.log('Search form found:', searchForm !== null);
     console.log('Search input found:', searchInput !== null);
@@ -111,9 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="btn btn-primary add-to-cart-btn">Add to Cart</button>
                 </div>
             </div>
-        `).join('');
+        `).join('');        
     
         searchResults.innerHTML = movieCards;
+
+        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+        addToCartButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                addToCart(movies[index]);
+            });
+        });
+
     }
 
     searchForm.addEventListener('submit', (e) => {
@@ -124,5 +139,33 @@ document.addEventListener('DOMContentLoaded', () => {
             searchMovies(query);
         }
     });
+    
+    async function addToCart(movie) {
+        try {
+            const cache = await caches.open(CACHE_NAMES.cart);
+            const response = await cache.match('cart-items');
+            const cartItems = response ? await response.json() : [];
+            
+            if (!cartItems.some(item => item.id === movie.id)) {
+                cartItems.push(movie);
+                
+                await cache.put('cart-items', new Response(JSON.stringify(cartItems)));
+                
+                updateCartCount(cartItems.length);
+                
+                alert('Movie added to cart!');
+            } else {
+                alert('This movie is already in your cart');
+            }
+        } catch (error) {
+            console.error('Failed to add to cart:', error);
+            alert('Failed to add movie to cart');
+        }
+    }
+
+    function updateCartCount(count) {
+        cartCount.textContent = count || '';
+    }
+    
 });
 
