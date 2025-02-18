@@ -27,14 +27,60 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const cartCount = document.querySelector('.cart-icon').nextElementSibling;
+    const homeLink = document.querySelector('.nav-item .home-icon').parentElement;
+    const searchLink = document.querySelector('.nav-item .search-icon').parentElement;
+    const cartLink = document.querySelector('.nav-item .cart-icon').parentElement;
+    const rentedLink = document.querySelector('.nav-item .rented-icon').parentElement;
+    const playButton = document.querySelector('.nav-item-play');
 
+    const homeScreen = document.querySelector('.home-screen');
+    const searchScreen = document.querySelector('.search-screen');
+    const viewScreen = document.querySelector('.view-screen');
     const cartScreen = document.querySelector('.cart-screen');
+    const rentedScreen = document.querySelector('.rented-screen');
+    const cartCount = document.querySelector('.cart-icon').nextElementSibling;
     const cartItems = document.querySelector('.cart-items');
-    const cartLink = document.querySelector('a[href="#"].nav-item .cart-icon').parentElement;
+
+
     console.log('Search form found:', searchForm !== null);
     console.log('Search input found:', searchInput !== null);
     console.log('Results container found:', searchResults !== null);
+
+    function navigateToScreen(screen) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(s => s.classList.remove('active'));
+        screen.classList.add('active');
+    }
+
+    homeLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateToScreen(homeScreen);
+        homeLink.classList.add('active');
+    });
+
+    searchLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateToScreen(searchScreen);
+        searchLink.classList.add('active');
+    });
+
+    cartLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateToScreen(cartScreen);
+        cartLink.classList.add('active');
+        loadCartItems();
+    });
+
+    rentedLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateToScreen(rentedScreen);
+        rentedLink.classList.add('active');
+    });
+
+    playButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateToScreen(viewScreen);
+    });
 
     function showLoading() {
         searchResults.innerHTML = `
@@ -55,6 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function searchMovies(query) {
         console.log('Searching for:', query); 
         showLoading();
+        navigateToScreen(searchScreen);
         try {
             if (!navigator.onLine) {
                 showError('You are offline. Please check your internet connection.');
@@ -216,12 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cartItems.innerHTML = cartCards;
     }
 
-    cartLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
-        cartScreen.classList.add('active');
-        loadCartItems();
-    });
+    
     
 });
 
