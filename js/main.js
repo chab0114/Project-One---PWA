@@ -9,6 +9,12 @@ const CACHE_NAMES = {
 
 
 document.addEventListener('DOMContentLoaded', () => {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+        .then(() => console.log('Service Worker registered successfully.'))
+        .catch(error => console.error('Service Worker registration failed:', error));
+    }
+
     const searchForms = document.querySelectorAll('.search-form');
     if (!searchForms.length) {
         console.error('Could not find search forms');
