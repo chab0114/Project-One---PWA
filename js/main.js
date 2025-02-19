@@ -9,15 +9,15 @@ const CACHE_NAMES = {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    const searchForm = document.querySelector('.search-form');
-    if (!searchForm) {
-        console.error('Could not find search form');
+    const searchForms = document.querySelectorAll('.search-form');
+    if (!searchForms.length) {
+        console.error('Could not find search forms');
         return;
     }
 
-    const searchInput = searchForm.querySelector('input[type="search"]');
-    if (!searchInput) {
-        console.error('Could not find search input');
+    const searchInputs = document.querySelectorAll('.search-form input[type="search"]');
+    if (!searchInputs.length) {
+        console.error('Could not find search inputs');
         return;
     }
 
@@ -41,15 +41,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const cartCount = document.querySelector('.cart-icon').nextElementSibling;
     const cartItems = document.querySelector('.cart-items');
 
-
-    console.log('Search form found:', searchForm !== null);
-    console.log('Search input found:', searchInput !== null);
-    console.log('Results container found:', searchResults !== null);
-
     function navigateToScreen(screen) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(s => s.classList.remove('active'));
         screen.classList.add('active');
+
+        initializeSearchStatus();
     }
 
     homeLink.addEventListener('click', (e) => {
@@ -82,17 +79,95 @@ document.addEventListener('DOMContentLoaded', () => {
         navigateToScreen(viewScreen);
     });
 
+    function displayResults(movies, searchQuery) {
+        const searchStatus = document.querySelector('.search-status');    
+        
+        if (!movies || movies.length === 0) {
+            searchStatus.innerHTML = `
+                <div class="status-message">
+                    <p>No results found for "${searchQuery}"</p>
+                </div>
+            `;
+            searchResults.innerHTML = '';
+            return;
+        }
+        console.log('Display movies:', movies);
+        searchStatus.innerHTML = `
+            <div class="status-message">
+                <p>Search results for "${searchQuery}"</p>
+            </div>
+        `;
+    
+        const movieCards = movies.map(movie => `
+            <div class="search-card" data-movie-id="${movie.id}">
+                <img 
+                    src="${movie.poster_path 
+                        ? IMAGE_BASE_URL + movie.poster_path 
+                        : 'assets/images/placeholder.jpg'}" 
+                    alt="${movie.title}" 
+                    class="search-card-image"
+                >
+                <div class="search-card-content">
+                    <div>
+                        <h3 class="movie-title">${movie.title}</h3>
+                        <p class="movie-year">${movie.release_date?.split('-')[0] || 'N/A'}</p>
+                        <div class="movie-rating">★ ${movie.vote_average?.toFixed(1) || 'N/A'}</div>
+                    </div>
+                    <button class="btn btn-primary add-to-cart-btn">Add to Cart</button>
+                </div>
+            </div>
+        `).join('');        
+    
+        searchResults.innerHTML = movieCards;
+    
+        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
+        addToCartButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                addToCart(movies[index]);
+            });
+        });
+    }
+
+    function navigateToScreen(screen) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(s => s.classList.remove('active'));
+        screen.classList.add('active');
+    
+        initializeSearchStatus();
+    }
+    
+    
+    function syncSearchInputs(value) {
+        searchInputs.forEach(input => {
+            input.value = value;
+        });
+    }
+
+    function initializeSearchStatus() {
+        const searchStatus = document.querySelector('.search-status');
+        if (searchStatus) {
+            searchStatus.innerHTML = `
+                <div class="status-message">
+                    <p>Welcome to WheatFlixRent</p>
+                </div>
+            `;
+        }
+    }
+    
+
     function showLoading() {
-        searchResults.innerHTML = `
-            <div class="loading-message">
+        const searchStatus = document.querySelector('.search-status');
+        searchStatus.innerHTML = `
+            <div class="status-message loading">
                 <p>Searching for movies...</p>
             </div>
         `;
     }
 
     function showError(message) {
-        searchResults.innerHTML = `
-            <div class="error-message">
+        const searchStatus = document.querySelector('.search-status');
+        searchStatus.innerHTML = `
+            <div class="status-message error">
                 <p>${message}</p>
             </div>
         `;
@@ -118,10 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await response.json();
             console.log('Search results:', data);
             if (data && data.results) {
-                displayResults(data.results);
+                displayResults(data.results, query);
             } else {
-                displayResults([]);
-            }
+                displayResults([], query);
+            }            
             
         } catch (error) {
             console.error('Search failed:', error);
@@ -129,65 +204,32 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    searchInput.addEventListener('keyup', (e) =>{
-        if (searchInput.value.trim() === '') {
-            searchResults.innerHTML = '';
-            return;
-        }
+    searchForms.forEach((form, index) => {
+        const input = searchInputs[index];
 
-        if (e.key === 'Enter') {
-            const query = searchInput.value.trim();
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = input.value.trim();
+            console.log('Form submitted with:', query);
             if (query) {
                 searchMovies(query);
             }
-        }
-    });
-
-    function displayResults(movies) {
-        if (!movies || movies.length === 0) {
-            searchResults.innerHTML = '<p>No movies found</p>';
-            return;
-        }
-        console.log('Display movies:', movies);
-    
-        const movieCards = movies.map(movie => `
-            <div class="search-card" data-movie-id="${movie.id}">
-                <img 
-                    src="${movie.poster_path 
-                        ? IMAGE_BASE_URL + movie.poster_path 
-                        : 'assets/images/placeholder.jpg'}" 
-                    alt="${movie.title}" 
-                    class="search-card-image"
-                >
-                <div class="search-card-content">
-                    <div>
-                        <h3 class="movie-title">${movie.title}</h3>
-                        <p class="movie-year">${movie.release_date?.split('-')[0] || 'N/A'}</p>
-                        <div class="movie-rating">★ ${movie.vote_average?.toFixed(1) || 'N/A'}</div>
-                    </div>
-                    <button class="btn btn-primary add-to-cart-btn">Add to Cart</button>
-                </div>
-            </div>
-        `).join('');        
-    
-        searchResults.innerHTML = movieCards;
-
-        const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
-        addToCartButtons.forEach((button, index) => {
-            button.addEventListener('click', () => {
-                addToCart(movies[index]);
-            });
         });
 
-    }
+        input.addEventListener('keyup', (e) => {
+            if (input.value.trim() === '') {
+                searchResults.innerHTML = '';
+                initializeSearchStatus();
+                return;
+            }
 
-    searchForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const query = searchInput.value.trim();
-        console.log('Input value:', searchInput.value);
-        if (query) {
-            searchMovies(query);
-        }
+            if (e.key === 'Enter') {
+                const query = input.value.trim();
+                if (query) {
+                    searchMovies(query);
+                }
+            }
+        });
     });
     
     async function addToCart(movie) {
@@ -263,7 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         cartItems.innerHTML = cartCards;
     }
 
-    
+    initializeSearchStatus();
     
 });
 
