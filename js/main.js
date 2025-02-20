@@ -109,7 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!movies || movies.length === 0) {
             searchStatus.innerHTML = `
                 <div class="status-message">
-                    <p>No results found for "${searchQuery}"</p>
+                    <p><span class="no-results">No results found for </span><span class="highlight">${searchQuery}</span></p>
                     ${!navigator.onLine ? `<p><small>${OFFLINE_MESSAGE}</small></p>` : ''}
                 </div>
             `;
@@ -119,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
         searchStatus.innerHTML = `
             <div class="status-message">
-                <p>Search results for "${searchQuery}"</p>
+                <p>Search results for <span class="highlight">${searchQuery}</span></p>
                 ${!navigator.onLine ? `<p><small>${OFFLINE_MESSAGE}</small></p>` : ''}
             </div>
         `;
@@ -347,7 +347,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function displayCartItems(items) {
         if (!items || items.length === 0) {
-            cartItems.innerHTML = '<p>Your cart is empty</p>';
+            cartItems.innerHTML = `
+                <div class="search-status">
+                    <div class="status-message">
+                        <p>Your cart is empty</p>
+                    </div>
+                </div>
+            `;
             return;
         }
     
@@ -452,11 +458,18 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function displayRentedItems(items) {
         const rentedItems = document.querySelector('.rented-items');
-        
+
         if (!items || items.length === 0) {
-            rentedItems.innerHTML = '<p>No movies rented yet</p>';
+            rentedItems.innerHTML = `
+                <div class="search-status">
+                    <div class="status-message">
+                        <p>No movies rented yet</p>
+                    </div>
+                </div>
+            `;
             return;
         }
+    
     
         const rentedCards = items.map(movie => `
             <div class="rented-card" data-movie-id="${movie.id}">

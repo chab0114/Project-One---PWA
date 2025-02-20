@@ -3,6 +3,7 @@
   --primary-color: #0069db;
   --secondary-color: #338dff;
   --background-color: #f8f9fb;
+  --warming-color: #ff3333;
   --text-color: #1f2937;
   --nav-bg: #1f2937;
   --search-bg: #ece6f0;
@@ -224,8 +225,12 @@ body {
   margin: 0;
 }
 
-.status-message p .highlight {
+.status-message .highlight {
   color: var(--logo-yellow);
+}
+
+.status-message .no-results {
+  color: var(--warming-color); 
 }
 
 .status-message::before {
