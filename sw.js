@@ -1,4 +1,11 @@
-const CACHE_NAME = 'wheatflix-v1'; 
+const CACHE_VERSION = 'v1';
+const CACHE_NAMES = {
+    STATIC: `wheatflix-static-${CACHE_VERSION}`,
+    DYNAMIC: `wheatflix-dynamic-${CACHE_VERSION}`,
+    CART: `wheatflix-cart-${CACHE_VERSION}`,
+    RENTED: `wheatflix-rented-${CACHE_VERSION}`
+};
+
 const ASSETS_TO_CACHE = [
     '/', 
     '/index.html',

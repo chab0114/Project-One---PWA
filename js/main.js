@@ -4,7 +4,8 @@ const SEARCH_ENDPOINT = '/search/movie';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 const CACHE_NAMES = {
     cart: 'cart-items-v1',
-    movies: 'movies-cache-v1'
+    movies: 'movies-cache-v1',
+    rented: 'rented-items-v1'
 };
 
 
@@ -73,11 +74,26 @@ document.addEventListener('DOMContentLoaded', () => {
         cartLink.classList.add('active');
         loadCartItems();
     });
+    
+    
 
     rentedLink.addEventListener('click', (e) => {
         e.preventDefault();
         navigateToScreen(rentedScreen);
         rentedLink.classList.add('active');
+    
+        async function loadRentedMoviesOnScreen() {
+            try {
+                const cache = await caches.open(CACHE_NAMES.rented);
+                const response = await cache.match('rented-items');
+                const rentedItems = response ? await response.json() : [];
+                
+                displayRentedItems(rentedItems);
+            } catch (error) {
+                console.error('Failed to load rented movies:', error);
+            }
+        }
+        loadRentedMoviesOnScreen();
     });
 
     playButton.addEventListener('click', (e) => {
@@ -309,10 +325,117 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     
         cartItems.innerHTML = cartCards;
+    
+        const rentButtons = cartItems.querySelectorAll('.rent-btn');
+        const removeButtons = cartItems.querySelectorAll('.remove-btn');
+    
+        rentButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                rentMovie(items[index]);
+            });
+        });
+    
+        removeButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                removeFromCart(items[index]);
+            });
+        });
     }
 
     initializeSearchStatus();
     
+    const rentButtons = cartItems.querySelectorAll('.rent-btn');
+    const removeButtons = cartItems.querySelectorAll('.remove-btn');
+
+    async function removeFromCart(movie) {
+        try {
+            const cache = await caches.open(CACHE_NAMES.cart);
+            const response = await cache.match('cart-items');
+            let cartItems = response ? await response.json() : [];
+            
+            cartItems = cartItems.filter(item => item.id !== movie.id);
+            
+            await cache.put('cart-items', new Response(JSON.stringify(cartItems)));
+            
+            displayCartItems(cartItems);
+            updateCartCount(cartItems.length);
+        } catch (error) {
+            console.error('Failed to remove from cart:', error);
+            alert('Failed to remove movie from cart');
+        }
+    }
+
+    async function rentMovie(movie) {
+        try {
+            const cartCache = await caches.open(CACHE_NAMES.cart);
+            const rentedCache = await caches.open(CACHE_NAMES.rented);
+            
+            const cartResponse = await cartCache.match('cart-items');
+            const rentedResponse = await rentedCache.match('rented-items');
+            
+            let cartItems = cartResponse ? await cartResponse.json() : [];
+            let rentedItems = rentedResponse ? await rentedResponse.json() : [];
+            
+            if (!rentedItems.some(item => item.id === movie.id)) {
+                rentedItems.push(movie);
+                
+                await rentedCache.put('rented-items', new Response(JSON.stringify(rentedItems)));
+                
+                cartItems = cartItems.filter(item => item.id !== movie.id);
+                await cartCache.put('cart-items', new Response(JSON.stringify(cartItems)));
+                
+                displayCartItems(cartItems);
+                displayRentedItems(rentedItems);
+                updateCartCount(cartItems.length);
+                
+                alert(`${movie.title} has been rented!`);
+            } else {
+                alert('This movie is already rented');
+            }
+        } catch (error) {
+            console.error('Failed to rent movie:', error);
+            alert('Failed to rent movie');
+        }
+    }
+    
+    function displayRentedItems(items) {
+        const rentedItems = document.querySelector('.rented-items');
+        
+        if (!items || items.length === 0) {
+            rentedItems.innerHTML = '<p>No movies rented yet</p>';
+            return;
+        }
+    
+        const rentedCards = items.map(movie => `
+            <div class="rented-card" data-movie-id="${movie.id}">
+                <div class="rented-card-image-container">
+                    <img 
+                        src="${movie.poster_path 
+                            ? IMAGE_BASE_URL + movie.poster_path 
+                            : 'assets/images/placeholder.jpg'}" 
+                        alt="${movie.title}" 
+                        class="rented-card-image"
+                    >
+                    <h3 class="rented-card-title">${movie.title}</h3>
+                </div>
+                <div class="rented-card-content">
+                    <p class="movie-year">Released: ${movie.release_date?.split('-')[0] || 'N/A'}</p>
+                    <div class="movie-rating">★ ${movie.vote_average?.toFixed(1) || 'N/A'}</div>
+                    <button class="btn btn-primary watch-btn">Watch</button>
+                </div>
+            </div>
+        `).join('');
+    
+        rentedItems.innerHTML = rentedCards;
+    }
+
+    rentButtons.forEach((button, index) => {
+        button.addEventListener('click', () => rentMovie(items[index]));
+    });
+
+    removeButtons.forEach((button, index) => {
+        button.addEventListener('click', () => removeFromCart(items[index]));
+    });
 });
 
 
