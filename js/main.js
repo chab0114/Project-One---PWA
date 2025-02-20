@@ -7,6 +7,8 @@ const CACHE_NAMES = {
     movies: 'movies-cache-v1',
     rented: 'rented-items-v1'
 };
+const OFFLINE_MESSAGE = 'You are offline. Showing cached results.';
+const ERROR_MESSAGE = 'Unable to fetch results. Please try again.';
 
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -108,15 +110,17 @@ document.addEventListener('DOMContentLoaded', () => {
             searchStatus.innerHTML = `
                 <div class="status-message">
                     <p>No results found for "${searchQuery}"</p>
+                    ${!navigator.onLine ? `<p><small>${OFFLINE_MESSAGE}</small></p>` : ''}
                 </div>
             `;
             searchResults.innerHTML = '';
             return;
         }
-        console.log('Display movies:', movies);
+    
         searchStatus.innerHTML = `
             <div class="status-message">
                 <p>Search results for "${searchQuery}"</p>
+                ${!navigator.onLine ? `<p><small>${OFFLINE_MESSAGE}</small></p>` : ''}
             </div>
         `;
     
@@ -125,9 +129,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 <img 
                     src="${movie.poster_path 
                         ? IMAGE_BASE_URL + movie.poster_path 
-                        : 'assets/images/placeholder.jpg'}" 
+                        : '/assets/images/placeholder.jpg'}" 
                     alt="${movie.title}" 
                     class="search-card-image"
+                    onerror="this.src='/assets/images/placeholder.jpg'"
                 >
                 <div class="search-card-content">
                     <div>
@@ -138,7 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="btn btn-primary add-to-cart-btn">Add to Cart</button>
                 </div>
             </div>
-        `).join('');        
+        `).join('');
     
         searchResults.innerHTML = movieCards;
     
@@ -170,7 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (searchStatus) {
             searchStatus.innerHTML = `
                 <div class="status-message">
-                    <p>Welcome to WheatFlixRent</p>
+                    <p>Welcome to <span class="highlight">WheatFlix</span>Rent</p>
                 </div>
             `;
         }
@@ -199,11 +204,39 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Searching for:', query); 
         showLoading();
         navigateToScreen(searchScreen);
+        
         try {
             if (!navigator.onLine) {
-                showError('You are offline. Please check your internet connection.');
+                console.log('Device is offline, searching in cache...');
+                showOfflineMessage();
+                
+                const cache = await caches.open(CACHE_NAMES.SEARCH);
+                if (!cache) {
+                    console.log('No cache found');
+                    displayResults([], query);
+                    return;
+                }
+    
+                const cachedRequests = await cache.keys();
+                let allCachedMovies = [];
+
+                for (const request of cachedRequests) {
+                    const response = await cache.match(request);
+                    const data = await response.json();
+                    if (data && data.results) {
+                        allCachedMovies = [...allCachedMovies, ...data.results];
+                    }
+                }
+    
+                const filteredMovies = allCachedMovies.filter(movie => 
+                    movie.title.toLowerCase().includes(query.toLowerCase())
+                );
+    
+                console.log('Found in cache:', filteredMovies.length, 'movies');
+                displayResults(filteredMovies, query);
                 return;
             }
+    
             const url = `${BASE_URL}${SEARCH_ENDPOINT}?api_key=${API_KEY}&query=${encodeURIComponent(query)}`;
             console.log('Making request to:', url); 
             
@@ -211,7 +244,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-
+    
             const data = await response.json();
             console.log('Search results:', data);
             if (data && data.results) {
@@ -222,9 +255,26 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (error) {
             console.error('Search failed:', error);
-            
+            showError('Search failed. Please try again.');
         }
     }
+
+    function showOfflineMessage() {
+        const searchStatus = document.querySelector('.search-status');
+        searchStatus.innerHTML = `
+            <div class="status-message">
+                <p>${OFFLINE_MESSAGE}</p>
+            </div>
+        `;
+    }
+
+    window.addEventListener('online', function() {
+        document.body.classList.remove('offline');
+    });
+    
+    window.addEventListener('offline', function() {
+        document.body.classList.add('offline');
+    });
 
     searchForms.forEach((form, index) => {
         const input = searchInputs[index];
