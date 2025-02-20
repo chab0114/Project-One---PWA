@@ -294,10 +294,84 @@ body {
   font-size: 0.9rem;
 }
 
-.search-card .btn {
-  align-self: flex-start;
-  padding: 0.4rem 1rem;
-  font-size: 0.9rem;
+.search-card-buttons {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.search-card-buttons .btn {
+  flex: 1;
+  min-width: 100px;
+}
+
+/* Details Screen */
+.details-screen {
+  padding: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--logo-bg);
+  text-decoration: none;
+  margin-bottom: 1rem;
+  cursor: pointer;
+}
+
+.back-button:hover {
+  color: var(--logo-yellow);
+}
+
+.back-arrow {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.movie-details {
+  background: white;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  box-shadow: var(--card-shadow);
+}
+
+.movie-details-image {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+}
+
+.movie-details-content {
+  padding: 1.5rem;
+}
+
+.movie-details-title {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.movie-details-info {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.movie-details-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.movie-details-label {
+  font-weight: bold;
+  color: var(--text-color);
+}
+
+.movie-details-overview {
+  line-height: 1.6;
+  color: var(--text-color);
 }
 
 /* Cart and Rented Cards */

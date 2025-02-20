@@ -109,8 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!movies || movies.length === 0) {
             searchStatus.innerHTML = `
                 <div class="status-message">
-                    <p><span class="no-results">No results found for </span><span class="highlight">${searchQuery}</span></p>
-                    ${!navigator.onLine ? `<p><small>${OFFLINE_MESSAGE}</small></p>` : ''}
+                    <p><span class="no-results">No results found</span> for <span class="highlight">${searchQuery}</span></p>
                 </div>
             `;
             searchResults.innerHTML = '';
@@ -120,7 +119,6 @@ document.addEventListener('DOMContentLoaded', () => {
         searchStatus.innerHTML = `
             <div class="status-message">
                 <p>Search results for <span class="highlight">${searchQuery}</span></p>
-                ${!navigator.onLine ? `<p><small>${OFFLINE_MESSAGE}</small></p>` : ''}
             </div>
         `;
     
@@ -132,7 +130,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         : '/assets/images/placeholder.jpg'}" 
                     alt="${movie.title}" 
                     class="search-card-image"
-                    onerror="this.src='/assets/images/placeholder.jpg'"
                 >
                 <div class="search-card-content">
                     <div>
@@ -140,10 +137,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p class="movie-year">${movie.release_date?.split('-')[0] || 'N/A'}</p>
                         <div class="movie-rating">★ ${movie.vote_average?.toFixed(1) || 'N/A'}</div>
                     </div>
-                    <button class="btn btn-primary add-to-cart-btn">Add to Cart</button>
+                    <div class="search-card-buttons">
+                        <button class="btn btn-primary add-to-cart-btn">Add to Cart</button>
+                        <button class="btn btn-secondary details-btn">Details</button>
+                    </div>
                 </div>
             </div>
-        `).join('');
+        `).join('');        
     
         searchResults.innerHTML = movieCards;
     
@@ -153,15 +153,81 @@ document.addEventListener('DOMContentLoaded', () => {
                 addToCart(movies[index]);
             });
         });
+    
+        const detailsButtons = document.querySelectorAll('.details-btn');
+        detailsButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                showMovieDetails(movies[index]);
+            });
+        });
     }
 
-    function navigateToScreen(screen) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(s => s.classList.remove('active'));
-        screen.classList.add('active');
+    const detailsButtons = document.querySelectorAll('.details-btn');
+    detailsButtons.forEach((button, index) => {
+        button.addEventListener('click', () => {
+            showMovieDetails(movies[index]);
+        });
+    });
+
+    function showMovieDetails(movie) {
+        console.log('Showing details for movie:', movie);
+        const detailsScreen = document.querySelector('.details-screen');
+        const movieDetails = detailsScreen.querySelector('.movie-details');
+        
+        movieDetails.innerHTML = `
+            <img 
+                src="${movie.poster_path 
+                    ? IMAGE_BASE_URL + movie.poster_path 
+                    : '/assets/images/placeholder.jpg'}" 
+                alt="${movie.title}" 
+                class="movie-details-image"
+            >
+            <div class="movie-details-content">
+                <h2 class="movie-details-title">${movie.title}</h2>
+                
+                <div class="movie-details-info">
+                    <div class="movie-details-row">
+                        <span class="movie-details-label">Release Date:</span>
+                        <span>${movie.release_date || 'N/A'}</span>
+                    </div>
+                    
+                    <div class="movie-details-row">
+                        <span class="movie-details-label">Rating:</span>
+                        <span>★ ${movie.vote_average?.toFixed(1) || 'N/A'}</span>
+                    </div>
+                    
+                    <div class="movie-details-row">
+                        <span class="movie-details-label">Vote Count:</span>
+                        <span>${movie.vote_count || 'N/A'}</span>
+                    </div>
+                    
+                    <div class="movie-details-row">
+                        <span class="movie-details-label">Original Language:</span>
+                        <span>${movie.original_language?.toUpperCase() || 'N/A'}</span>
+                    </div>
+                </div>
+                
+                <div class="movie-details-overview">
+                    <p>${movie.overview || 'No overview available.'}</p>
+                </div>
+            </div>
+        `;
     
-        initializeSearchStatus();
+        navigateToScreen(detailsScreen);
     }
+
+    const backButton = document.querySelector('.back-button');
+    backButton.addEventListener('click', () => {
+        navigateToScreen(searchScreen);
+    });
+
+        function navigateToScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(s => s.classList.remove('active'));
+            screen.classList.add('active');
+        
+            initializeSearchStatus();
+        }
     
     
     function syncSearchInputs(value) {
