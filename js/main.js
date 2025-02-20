@@ -376,22 +376,24 @@ document.addEventListener('DOMContentLoaded', () => {
             let cartItems = cartResponse ? await cartResponse.json() : [];
             let rentedItems = rentedResponse ? await rentedResponse.json() : [];
             
-            if (!rentedItems.some(item => item.id === movie.id)) {
-                rentedItems.push(movie);
-                
-                await rentedCache.put('rented-items', new Response(JSON.stringify(rentedItems)));
-                
-                cartItems = cartItems.filter(item => item.id !== movie.id);
-                await cartCache.put('cart-items', new Response(JSON.stringify(cartItems)));
-                
-                displayCartItems(cartItems);
-                displayRentedItems(rentedItems);
-                updateCartCount(cartItems.length);
-                
-                alert(`${movie.title} has been rented!`);
-            } else {
+            if (rentedItems.some(item => item.id === movie.id)) {
                 alert('This movie is already rented');
+                return;
             }
+    
+            rentedItems.push(movie);
+            await rentedCache.put('rented-items', new Response(JSON.stringify(rentedItems)));
+            
+            cartItems = cartItems.filter(item => item.id !== movie.id);
+            await cartCache.put('cart-items', new Response(JSON.stringify(cartItems)));
+            
+            displayCartItems(cartItems);
+            displayRentedItems(rentedItems);
+            updateCartCount(cartItems.length);
+            
+            alert(`${movie.title} has been rented!`);
+            
+            navigateToScreen(rentedScreen);
         } catch (error) {
             console.error('Failed to rent movie:', error);
             alert('Failed to rent movie');
@@ -427,6 +429,28 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     
         rentedItems.innerHTML = rentedCards;
+    
+        const watchButtons = rentedItems.querySelectorAll('.watch-btn');
+        watchButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                watchMovie(items[index]);
+            });
+        });
+    }
+
+    function watchMovie(movie) {
+        navigateToScreen(viewScreen);
+    
+        viewScreen.innerHTML = `
+            <div class="view-movie-container">
+                <h2>${movie.title}</h2>
+                <video controls>
+                    <source src="assets/videos/placeholder.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+                <button class="btn btn-primary mark-watched-btn">Mark as Watched</button>
+            </div>
+        `;
     }
 
     rentButtons.forEach((button, index) => {
