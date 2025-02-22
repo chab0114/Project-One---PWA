@@ -306,7 +306,12 @@ body {
 }
 
 .search-card.added {
-  background: #f0f0f0;
+  background: #e6f0ff;
+  opacity: 0.8;
+}
+
+.search-card.rented {
+  background: #fff9e6;
   opacity: 0.8;
 }
 

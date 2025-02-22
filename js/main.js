@@ -99,13 +99,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         const cartCache = await caches.open(CACHE_NAMES.CART);
+        const rentedCache = await caches.open(CACHE_NAMES.RENTED);
+        
         const cartIndexResponse = await cartCache.match('cart-index');
+        const rentedIndexResponse = await rentedCache.match('rented-index');
+        
         const cartIndex = cartIndexResponse ? await cartIndexResponse.json() : [];
+        const rentedIndex = rentedIndexResponse ? await rentedIndexResponse.json() : [];
     
         const movieCards = movies.map(movie => {
             const isInCart = cartIndex.includes(movie.id);
+            const isRented = rentedIndex.includes(movie.id);
+            
+            const buttonState = isRented ? 'rented' : (isInCart ? 'added' : '');
+            const buttonText = isRented ? 'Rented' : (isInCart ? 'Added' : 'Add to Cart');
+            
             return `
-                <div class="search-card ${isInCart ? 'added' : ''}" data-movie-id="${movie.id}">
+                <div class="search-card ${buttonState}" data-movie-id="${movie.id}">
                     <img 
                         src="${movie.poster_path 
                             ? IMAGE_BASE_URL + movie.poster_path 
@@ -120,8 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             <div class="movie-rating">★ ${movie.vote_average?.toFixed(1) || 'N/A'}</div>
                         </div>
                         <div class="search-card-buttons">
-                            <button class="btn btn-primary add-to-cart-btn ${isInCart ? 'added' : ''}" ${isInCart ? 'disabled' : ''}>
-                                ${isInCart ? 'Added' : 'Add to Cart'}
+                            <button class="btn btn-primary add-to-cart-btn ${buttonState}" ${(isInCart || isRented) ? 'disabled' : ''}>
+                                ${buttonText}
                             </button>
                             <button class="btn btn-secondary details-btn">Details</button>
                         </div>
@@ -646,6 +656,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     rentButton.textContent = 'Rented';
                     rentButton.classList.add('rented');
                     rentButton.disabled = true;
+                }
+            }
+
+            const searchCard = document.querySelector(`.search-card[data-movie-id="${movie.id}"]`);
+            if (searchCard) {
+                searchCard.classList.remove('added');
+                searchCard.classList.add('rented');
+                const addButton = searchCard.querySelector('.add-to-cart-btn');
+                if (addButton) {
+                    addButton.textContent = 'Rented';
+                    addButton.classList.remove('added');
+                    addButton.classList.add('rented');
+                    addButton.disabled = true;
                 }
             }
             
