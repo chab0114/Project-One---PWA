@@ -373,16 +373,25 @@ document.addEventListener('DOMContentLoaded', () => {
     async function addToCart(movie) {
         try {
             const cache = await caches.open(CACHE_NAMES.cart);
-            const response = await cache.match('cart-items');
-            const cartItems = response ? await response.json() : [];
             
-            if (!cartItems.some(item => item.id === movie.id)) {
-                cartItems.push(movie);
+            // Check if movie exists in cart first
+            const movieKey = `movie-${movie.id}`;
+            const exists = await cache.match(movieKey);
+            
+            if (!exists) {
+                // Store the individual movie
+                await cache.put(movieKey, new Response(JSON.stringify(movie)));
                 
-                await cache.put('cart-items', new Response(JSON.stringify(cartItems)));
+                // Maintain an index of IDs for listing
+                const indexResponse = await cache.match('cart-index');
+                const index = indexResponse ? await indexResponse.json() : [];
                 
-                updateCartCount(cartItems.length);
+                if (!index.includes(movie.id)) {
+                    index.push(movie.id);
+                    await cache.put('cart-index', new Response(JSON.stringify(index)));
+                }
                 
+                updateCartCount(index.length);
                 alert('Movie added to cart!');
             } else {
                 alert('This movie is already in your cart');
@@ -400,11 +409,27 @@ document.addEventListener('DOMContentLoaded', () => {
     async function loadCartItems() {
         try {
             const cache = await caches.open(CACHE_NAMES.cart);
-            const response = await cache.match('cart-items');
-            const cartItems = response ? await response.json() : [];
             
-            console.log('Loading cart items:', cartItems);
-            displayCartItems(cartItems);
+            // Get the index of movie IDs
+            const indexResponse = await cache.match('cart-index');
+            if (!indexResponse) {
+                displayCartItems([]);
+                return;
+            }
+            
+            const index = await indexResponse.json();
+            const movies = [];
+            
+            // Fetch each movie individually
+            for (const id of index) {
+                const response = await cache.match(`movie-${id}`);
+                if (response) {
+                    const movie = await response.json();
+                    movies.push(movie);
+                }
+            }
+            
+            displayCartItems(movies);
         } catch (error) {
             console.error('Failed to load cart items:', error);
         }
