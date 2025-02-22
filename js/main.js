@@ -76,27 +76,6 @@ document.addEventListener('DOMContentLoaded', () => {
         cartLink.classList.add('active');
         loadCartItems();
     });
-    
-    
-
-    rentedLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        navigateToScreen(rentedScreen);
-        rentedLink.classList.add('active');
-    
-        async function loadRentedMoviesOnScreen() {
-            try {
-                const cache = await caches.open(CACHE_NAMES.rented);
-                const response = await cache.match('rented-items');
-                const rentedItems = response ? await response.json() : [];
-                
-                displayRentedItems(rentedItems);
-            } catch (error) {
-                console.error('Failed to load rented movies:', error);
-            }
-        }
-        loadRentedMoviesOnScreen();
-    });
 
     playButton.addEventListener('click', (e) => {
         e.preventDefault();
@@ -517,36 +496,80 @@ document.addEventListener('DOMContentLoaded', () => {
             const cartCache = await caches.open(CACHE_NAMES.cart);
             const rentedCache = await caches.open(CACHE_NAMES.rented);
             
-            const cartResponse = await cartCache.match('cart-items');
-            const rentedResponse = await rentedCache.match('rented-items');
+            // Check if movie already exists in rented items
+            const rentedMovieKey = `movie-${movie.id}`;
+            const movieExists = await rentedCache.match(rentedMovieKey);
             
-            let cartItems = cartResponse ? await cartResponse.json() : [];
-            let rentedItems = rentedResponse ? await rentedResponse.json() : [];
-            
-            if (rentedItems.some(item => item.id === movie.id)) {
+            if (movieExists) {
                 alert('This movie is already rented');
                 return;
             }
-    
-            rentedItems.push(movie);
-            await rentedCache.put('rented-items', new Response(JSON.stringify(rentedItems)));
             
-            cartItems = cartItems.filter(item => item.id !== movie.id);
-            await cartCache.put('cart-items', new Response(JSON.stringify(cartItems)));
+            // Store the individual movie in rented cache
+            await rentedCache.put(rentedMovieKey, new Response(JSON.stringify(movie)));
             
-            displayCartItems(cartItems);
+            // Update the rented index
+            const indexResponse = await rentedCache.match('rented-index');
+            const rentedIndex = indexResponse ? await indexResponse.json() : [];
+            
+            if (!rentedIndex.includes(movie.id)) {
+                rentedIndex.push(movie.id);
+                await rentedCache.put('rented-index', new Response(JSON.stringify(rentedIndex)));
+            }
+            
+            // Remove from cart
+            await removeFromCart(movie);
+            
+            // Load and display updated rented items
+            const rentedItems = await loadRentedItems();
             displayRentedItems(rentedItems);
-            updateCartCount(cartItems.length);
             
             alert(`${movie.title} has been rented!`);
-            
             navigateToScreen(rentedScreen);
         } catch (error) {
             console.error('Failed to rent movie:', error);
             alert('Failed to rent movie');
         }
     }
-    
+
+    async function loadRentedItems() {
+        try {
+            const cache = await caches.open(CACHE_NAMES.rented);
+            
+            // Get the index of movie IDs
+            const indexResponse = await cache.match('rented-index');
+            if (!indexResponse) {
+                return [];
+            }
+            
+            const index = await indexResponse.json();
+            const movies = [];
+            
+            // Fetch each movie individually
+            for (const id of index) {
+                const response = await cache.match(`movie-${id}`);
+                if (response) {
+                    const movie = await response.json();
+                    movies.push(movie);
+                }
+            }
+            
+            return movies;
+        } catch (error) {
+            console.error('Failed to load rented items:', error);
+            return [];
+        }
+    }
+
+    rentedLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        navigateToScreen(rentedScreen);
+        rentedLink.classList.add('active');
+
+        const rentedMovies = await loadRentedItems();
+        displayRentedItems(rentedMovies);
+    });
+
     function displayRentedItems(items) {
         const rentedItems = document.querySelector('.rented-items');
 
@@ -560,8 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             return;
         }
-    
-    
+
         const rentedCards = items.map(movie => `
             <div class="rented-card" data-movie-id="${movie.id}">
                 <div class="rented-card-image-container">
@@ -578,18 +600,51 @@ document.addEventListener('DOMContentLoaded', () => {
                     <p class="movie-year">Released: ${movie.release_date?.split('-')[0] || 'N/A'}</p>
                     <div class="movie-rating">★ ${movie.vote_average?.toFixed(1) || 'N/A'}</div>
                     <button class="btn btn-primary watch-btn">Watch</button>
+                    <button class="btn btn-secondary return-btn">Return</button>
                 </div>
             </div>
         `).join('');
-    
+
         rentedItems.innerHTML = rentedCards;
-    
+
         const watchButtons = rentedItems.querySelectorAll('.watch-btn');
         watchButtons.forEach((button, index) => {
             button.addEventListener('click', () => {
                 watchMovie(items[index]);
             });
         });
+        
+        const returnButtons = rentedItems.querySelectorAll('.return-btn');
+        returnButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                returnMovie(items[index]);
+            });
+        });
+    }
+
+    async function returnMovie(movie) {
+        try {
+            const rentedCache = await caches.open(CACHE_NAMES.rented);
+            
+            // Remove the movie from the cache
+            await rentedCache.delete(`movie-${movie.id}`);
+            
+            // Update the index
+            const indexResponse = await rentedCache.match('rented-index');
+            let rentedIndex = indexResponse ? await indexResponse.json() : [];
+            
+            rentedIndex = rentedIndex.filter(id => id !== movie.id);
+            await rentedCache.put('rented-index', new Response(JSON.stringify(rentedIndex)));
+            
+            // Reload and display the updated list
+            const rentedMovies = await loadRentedItems();
+            displayRentedItems(rentedMovies);
+            
+            alert(`${movie.title} has been returned!`);
+        } catch (error) {
+            console.error('Failed to return movie:', error);
+            alert('Failed to return movie');
+        }
     }
 
     function watchMovie(movie) {
