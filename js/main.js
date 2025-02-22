@@ -3,9 +3,12 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const SEARCH_ENDPOINT = '/search/movie';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
 const CACHE_NAMES = {
-    cart: 'cart-items-v1',
-    movies: 'movies-cache-v1',
-    rented: 'rented-items-v1'
+    APP: 'appFiles_5',
+    CART: 'cart-items-v1',
+    RENTED: 'rented-items-v1',
+    SEARCH: 'search-results-v1',
+    IMAGES: 'movie-images-v1',
+    DYNAMIC: 'dynamic-content-v1' 
 };
 const OFFLINE_MESSAGE = 'You are offline. Showing cached results.';
 const ERROR_MESSAGE = 'Unable to fetch results. Please try again.';
@@ -448,7 +451,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     async function addToCart(movie) {
         try {
-            const cache = await caches.open(CACHE_NAMES.cart);
+            const cache = await caches.open(CACHE_NAMES.CART);
             
             // Check if movie exists in cart first
             const movieKey = `movie-${movie.id}`;
@@ -484,7 +487,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadCartItems() {
         try {
-            const cache = await caches.open(CACHE_NAMES.cart);
+            const cache = await caches.open(CACHE_NAMES.CART);
             
             // Get the index of movie IDs
             const indexResponse = await cache.match('cart-index');
@@ -573,7 +576,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function removeFromCart(movie) {
         try {
-            const cache = await caches.open(CACHE_NAMES.cart);
+            const cache = await caches.open(CACHE_NAMES.CART);
             
             // Remove the movie from cache
             await cache.delete(`movie-${movie.id}`);
@@ -600,8 +603,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function rentMovie(movie) {
         try {
-            const cartCache = await caches.open(CACHE_NAMES.cart);
-            const rentedCache = await caches.open(CACHE_NAMES.rented);
+            const cartCache = await caches.open(CACHE_NAMES.CART);
+            const rentedCache = await caches.open(CACHE_NAMES.RENTED);
             
             // Check if movie already exists in rented items
             const rentedMovieKey = `movie-${movie.id}`;
@@ -654,7 +657,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadRentedItems() {
         try {
-            const cache = await caches.open(CACHE_NAMES.rented);
+            const cache = await caches.open(CACHE_NAMES.RENTED);
             
             // Get the index of movie IDs
             const indexResponse = await cache.match('rented-index');
@@ -744,7 +747,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function returnMovie(movie) {
         try {
-            const rentedCache = await caches.open(CACHE_NAMES.rented);
+            const rentedCache = await caches.open(CACHE_NAMES.RENTED);
             
             // Remove the movie from the cache
             await rentedCache.delete(`movie-${movie.id}`);
