@@ -70,11 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
         searchLink.classList.add('active');
     });
 
-    cartLink.addEventListener('click', (e) => {
+    cartLink.addEventListener('click', async (e) => {
         e.preventDefault();
         navigateToScreen(cartScreen);
         cartLink.classList.add('active');
-        loadCartItems();
+        const items = await loadCartItems();
+        displayCartItems(items);
     });
 
     playButton.addEventListener('click', (e) => {
@@ -251,48 +252,34 @@ document.addEventListener('DOMContentLoaded', () => {
         navigateToScreen(searchScreen);
         
         try {
+            // Check if online
             if (!navigator.onLine) {
                 console.log('Device is offline, searching in cache...');
                 showOfflineMessage();
                 
-                const cache = await caches.open(CACHE_NAMES.SEARCH);
-                if (!cache) {
-                    console.log('No cache found');
-                    displayResults([], query);
-                    return;
-                }
-    
-                const cachedRequests = await cache.keys();
-                let allCachedMovies = [];
-
-                for (const request of cachedRequests) {
-                    const response = await cache.match(request);
-                    const data = await response.json();
-                    if (data && data.results) {
-                        allCachedMovies = [...allCachedMovies, ...data.results];
-                    }
-                }
-    
-                const filteredMovies = allCachedMovies.filter(movie => 
-                    movie.title.toLowerCase().includes(query.toLowerCase())
-                );
-    
-                console.log('Found in cache:', filteredMovies.length, 'movies');
-                displayResults(filteredMovies, query);
+                // Get search results from cache
+                const movies = await getSearchResultsFromCache(query);
+                displayResults(movies, query);
                 return;
             }
-    
+            
+            // If online - make the API request
             const url = `${BASE_URL}${SEARCH_ENDPOINT}?api_key=${API_KEY}&query=${encodeURIComponent(query)}`;
             console.log('Making request to:', url); 
-            
+        
             const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-    
+
             const data = await response.json();
             console.log('Search results:', data);
+            
             if (data && data.results) {
+                // Cache each movie individually and store the query
+                await cacheSearchResults(query, data.results);
+                
+                // Display the results
                 displayResults(data.results, query);
             } else {
                 displayResults([], query);
@@ -302,6 +289,116 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('Search failed:', error);
             showError('Search failed. Please try again.');
         }
+    }
+
+    async function cacheSearchResults(query, movies) {
+        try {
+            const cache = await caches.open(CACHE_NAMES.SEARCH);
+            
+            // Store the query-to-movie-ids mapping
+            const queryKey = `query-${query.toLowerCase()}`;
+            const movieIds = movies.map(movie => movie.id);
+            await cache.put(queryKey, new Response(JSON.stringify(movieIds)));
+            
+            // Store each movie individually
+            for (const movie of movies) {
+                const movieKey = `movie-${movie.id}`;
+                
+                // Check if the movie is already cached
+                const exists = await cache.match(movieKey);
+                if (!exists) {
+                    await cache.put(movieKey, new Response(JSON.stringify(movie)));
+                }
+            }
+            
+            // Also store a timestamp to know when this search was performed
+            await cache.put(`${queryKey}-timestamp`, new Response(JSON.stringify(Date.now())));
+            
+            // Store a list of all cached queries for easier lookup
+            const queriesResponse = await cache.match('cached-queries');
+            const cachedQueries = queriesResponse ? await queriesResponse.json() : [];
+            
+            if (!cachedQueries.includes(query.toLowerCase())) {
+                cachedQueries.push(query.toLowerCase());
+                await cache.put('cached-queries', new Response(JSON.stringify(cachedQueries)));
+            }
+            
+        } catch (error) {
+            console.error('Error caching search results:', error);
+        }
+    }
+    
+    async function getSearchResultsFromCache(query) {
+        try {
+            const cache = await caches.open(CACHE_NAMES.SEARCH);
+            const queryKey = `query-${query.toLowerCase()}`;
+            
+            // First, try to find an exact match for the query
+            const queryResponse = await cache.match(queryKey);
+            
+            if (queryResponse) {
+                // We found this exact query in the cache
+                const movieIds = await queryResponse.json();
+                const movies = [];
+                
+                // Retrieve each movie by its ID
+                for (const id of movieIds) {
+                    const movieResponse = await cache.match(`movie-${id}`);
+                    if (movieResponse) {
+                        const movie = await movieResponse.json();
+                        movies.push(movie);
+                    }
+                }
+                
+                return movies;
+            }
+            
+            // If no exact match, try a more flexible search across all cached movies
+            console.log('No exact query match, searching all cached movies');
+            
+            // Get list of all cached queries
+            const queriesResponse = await cache.match('cached-queries');
+            if (!queriesResponse) {
+                return [];
+            }
+            
+            const cachedQueries = await queriesResponse.json();
+            const allMovies = [];
+            
+            // Gather all cached movies from all queries
+            for (const cachedQuery of cachedQueries) {
+                const queryResp = await cache.match(`query-${cachedQuery}`);
+                if (queryResp) {
+                    const ids = await queryResp.json();
+                    
+                    for (const id of ids) {
+                        const movieResp = await cache.match(`movie-${id}`);
+                        if (movieResp) {
+                            const movie = await movieResp.json();
+                            // Avoid duplicates
+                            if (!allMovies.some(m => m.id === movie.id)) {
+                                allMovies.push(movie);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Filter the movies based on the query
+            const lowerQuery = query.toLowerCase();
+            return allMovies.filter(movie => 
+                movie.title.toLowerCase().includes(lowerQuery) ||
+                (movie.overview && movie.overview.toLowerCase().includes(lowerQuery))
+            );
+            
+        } catch (error) {
+            console.error('Error retrieving from cache:', error);
+            return [];
+        }
+    }
+    
+    function isApiRequest(request) {
+        return request.url.includes('api.themoviedb.org');
     }
 
     function showOfflineMessage() {
@@ -408,9 +505,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             }
             
-            displayCartItems(movies);
+            return movies;
         } catch (error) {
             console.error('Failed to load cart items:', error);
+            return [];
         }
     }
     
@@ -433,7 +531,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <img 
                         src="${movie.poster_path 
                             ? IMAGE_BASE_URL + movie.poster_path 
-                            : 'assets/images/placeholder.jpg'}" 
+                            : '/assets/images/placeholder.jpg'}" 
                         alt="${movie.title}" 
                         class="cart-card-image"
                     >
@@ -476,15 +574,24 @@ document.addEventListener('DOMContentLoaded', () => {
     async function removeFromCart(movie) {
         try {
             const cache = await caches.open(CACHE_NAMES.cart);
-            const response = await cache.match('cart-items');
-            let cartItems = response ? await response.json() : [];
             
-            cartItems = cartItems.filter(item => item.id !== movie.id);
+            // Remove the movie from cache
+            await cache.delete(`movie-${movie.id}`);
             
-            await cache.put('cart-items', new Response(JSON.stringify(cartItems)));
+            // Update the index
+            const indexResponse = await cache.match('cart-index');
+            let cartIndex = indexResponse ? await indexResponse.json() : [];
+            cartIndex = cartIndex.filter(id => id !== movie.id);
+            await cache.put('cart-index', new Response(JSON.stringify(cartIndex)));
             
-            displayCartItems(cartItems);
-            updateCartCount(cartItems.length);
+            // Update cart count
+            updateCartCount(cartIndex.length);
+            
+            // Load and display updated cart
+            const items = await loadCartItems();
+            displayCartItems(items);
+            
+            alert(`${movie.title} has been removed from cart!`);
         } catch (error) {
             console.error('Failed to remove from cart:', error);
             alert('Failed to remove movie from cart');
@@ -517,15 +624,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 await rentedCache.put('rented-index', new Response(JSON.stringify(rentedIndex)));
             }
             
-            // Remove from cart
-            await removeFromCart(movie);
+            // Remove from cart cache
+            const cartIndexResponse = await cartCache.match('cart-index');
+            let cartIndex = cartIndexResponse ? await cartIndexResponse.json() : [];
+            cartIndex = cartIndex.filter(id => id !== movie.id);
+            await cartCache.put('cart-index', new Response(JSON.stringify(cartIndex)));
+            await cartCache.delete(`movie-${movie.id}`);
             
-            // Load and display updated rented items
-            const rentedItems = await loadRentedItems();
-            displayRentedItems(rentedItems);
+            // Update cart count
+            updateCartCount(cartIndex.length);
             
+            // Load remaining cart items and display them
+            const remainingCartItems = await loadCartItems();
+            displayCartItems(remainingCartItems);
+            
+            // Show success message
             alert(`${movie.title} has been rented!`);
-            navigateToScreen(rentedScreen);
+
+            // Load and display updated cart
+            const items = await loadCartItems();
+            displayCartItems(items);
+
+            
         } catch (error) {
             console.error('Failed to rent movie:', error);
             alert('Failed to rent movie');
@@ -661,14 +781,6 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
     }
-
-    rentButtons.forEach((button, index) => {
-        button.addEventListener('click', () => rentMovie(items[index]));
-    });
-
-    removeButtons.forEach((button, index) => {
-        button.addEventListener('click', () => removeFromCart(items[index]));
-    });
 });
 
 

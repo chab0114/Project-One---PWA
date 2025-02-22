@@ -138,6 +138,32 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
+    if (isApiRequest(event.request)) {
+        console.log('[SW] API request:', event.request.url);
+        event.respondWith(
+            fetch(event.request)
+                .then(response => {
+                    console.log('[SW] API response received');
+                    return response;
+                })
+                .catch(() => {
+                    console.log('[SW] API fetch failed, checking cache');
+                    return caches.match(event.request)
+                        .then(cachedResponse => {
+                            if (cachedResponse) {
+                                console.log('[SW] Found API response in cache');
+                                return cachedResponse;
+                            }
+                            console.log('[SW] No cached API response, returning empty results');
+                            return new Response(JSON.stringify({ results: [] }), {
+                                headers: { 'Content-Type': 'application/json' }
+                            });
+                        });
+                })
+        );
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request)
             .then(response => {
