@@ -305,6 +305,16 @@ body {
   min-width: 100px;
 }
 
+.search-card.added {
+  background: #f0f0f0;
+  opacity: 0.8;
+}
+
+.btn.added {
+  background-color: #808080 !important;
+  cursor: not-allowed;
+}
+
 /* Details Screen */
 .details-screen {
   padding: 1rem;
@@ -452,6 +462,16 @@ body {
   align-items: center;
   padding: 1rem;
   width: 100%;
+}
+
+.cart-card.rented {
+  background: #f0f0f0; 
+  opacity: 0.8;
+}
+
+.btn.rented {
+  background-color: #808080 !important;
+  cursor: not-allowed;
 }
 
 /* Button Styles */

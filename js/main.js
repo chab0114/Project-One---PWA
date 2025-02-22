@@ -13,7 +13,6 @@ const CACHE_NAMES = {
 const OFFLINE_MESSAGE = 'You are offline. Showing cached results.';
 const ERROR_MESSAGE = 'Unable to fetch results. Please try again.';
 
-
 document.addEventListener('DOMContentLoaded', () => {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js')
@@ -86,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
         navigateToScreen(viewScreen);
     });
 
-    function displayResults(movies, searchQuery) {
+    async function displayResults(movies, searchQuery, isOffline = false) {
         const searchStatus = document.querySelector('.search-status');    
         
         if (!movies || movies.length === 0) {
@@ -98,35 +97,44 @@ document.addEventListener('DOMContentLoaded', () => {
             searchResults.innerHTML = '';
             return;
         }
+        
+        const cartCache = await caches.open(CACHE_NAMES.CART);
+        const cartIndexResponse = await cartCache.match('cart-index');
+        const cartIndex = cartIndexResponse ? await cartIndexResponse.json() : [];
     
-        searchStatus.innerHTML = `
-            <div class="status-message">
-                <p>Search results for <span class="highlight">${searchQuery}</span></p>
-            </div>
-        `;
-    
-        const movieCards = movies.map(movie => `
-            <div class="search-card" data-movie-id="${movie.id}">
-                <img 
-                    src="${movie.poster_path 
-                        ? IMAGE_BASE_URL + movie.poster_path 
-                        : '/assets/images/placeholder.jpg'}" 
-                    alt="${movie.title}" 
-                    class="search-card-image"
-                >
-                <div class="search-card-content">
-                    <div>
-                        <h3 class="movie-title">${movie.title}</h3>
-                        <p class="movie-year">${movie.release_date?.split('-')[0] || 'N/A'}</p>
-                        <div class="movie-rating">★ ${movie.vote_average?.toFixed(1) || 'N/A'}</div>
-                    </div>
-                    <div class="search-card-buttons">
-                        <button class="btn btn-primary add-to-cart-btn">Add to Cart</button>
-                        <button class="btn btn-secondary details-btn">Details</button>
+        const movieCards = movies.map(movie => {
+            const isInCart = cartIndex.includes(movie.id);
+            return `
+                <div class="search-card ${isInCart ? 'added' : ''}" data-movie-id="${movie.id}">
+                    <img 
+                        src="${movie.poster_path 
+                            ? IMAGE_BASE_URL + movie.poster_path 
+                            : '/assets/images/placeholder.jpg'}" 
+                        alt="${movie.title}" 
+                        class="search-card-image"
+                    >
+                    <div class="search-card-content">
+                        <div>
+                            <h3 class="movie-title">${movie.title}</h3>
+                            <p class="movie-year">${movie.release_date?.split('-')[0] || 'N/A'}</p>
+                            <div class="movie-rating">★ ${movie.vote_average?.toFixed(1) || 'N/A'}</div>
+                        </div>
+                        <div class="search-card-buttons">
+                            <button class="btn btn-primary add-to-cart-btn ${isInCart ? 'added' : ''}" ${isInCart ? 'disabled' : ''}>
+                                ${isInCart ? 'Added' : 'Add to Cart'}
+                            </button>
+                            <button class="btn btn-secondary details-btn">Details</button>
+                        </div>
                     </div>
                 </div>
+            `;
+        }).join('');        
+        
+        searchStatus.innerHTML = `
+            <div class="status-message">
+                <p>${isOffline ? '<span class="no-results">You are offline!</span> Showing cached results for ' : 'Search results for '}<span class="highlight">${searchQuery}</span></p>
             </div>
-        `).join('');        
+        `;        
     
         searchResults.innerHTML = movieCards;
     
@@ -262,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 // Get search results from cache
                 const movies = await getSearchResultsFromCache(query);
-                displayResults(movies, query);
+                displayResults(movies, query, true);
                 return;
             }
             
@@ -450,36 +458,50 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     async function addToCart(movie) {
-        try {
-            const cache = await caches.open(CACHE_NAMES.CART);
-            
-            // Check if movie exists in cart first
-            const movieKey = `movie-${movie.id}`;
-            const exists = await cache.match(movieKey);
-            
-            if (!exists) {
-                // Store the individual movie
-                await cache.put(movieKey, new Response(JSON.stringify(movie)));
-                
-                // Maintain an index of IDs for listing
-                const indexResponse = await cache.match('cart-index');
-                const index = indexResponse ? await indexResponse.json() : [];
-                
-                if (!index.includes(movie.id)) {
-                    index.push(movie.id);
-                    await cache.put('cart-index', new Response(JSON.stringify(index)));
-                }
-                
-                updateCartCount(index.length);
-                alert('Movie added to cart!');
-            } else {
-                alert('This movie is already in your cart');
-            }
-        } catch (error) {
-            console.error('Failed to add to cart:', error);
-            alert('Failed to add movie to cart');
+    try {
+        const cache = await caches.open(CACHE_NAMES.CART);
+        
+        // Check if movie exists in cart first
+        const movieKey = `movie-${movie.id}`;
+        const exists = await cache.match(movieKey);
+        
+        if (exists) {
+            alert('This movie is already in your cart');
+            return;
         }
+        
+        // Update UI to show it's added
+        const searchCard = document.querySelector(`.search-card[data-movie-id="${movie.id}"]`);
+        if (searchCard) {
+            searchCard.classList.add('added');
+            const addButton = searchCard.querySelector('.add-to-cart-btn');
+            if (addButton) {
+                addButton.textContent = 'Added';
+                addButton.classList.add('added');
+                addButton.disabled = true;
+            }
+        }
+
+        // Store the individual movie
+        await cache.put(movieKey, new Response(JSON.stringify(movie)));
+        
+        // Maintain an index of IDs for listing
+        const indexResponse = await cache.match('cart-index');
+        const index = indexResponse ? await indexResponse.json() : [];
+        
+        if (!index.includes(movie.id)) {
+            index.push(movie.id);
+            await cache.put('cart-index', new Response(JSON.stringify(index)));
+        }
+        
+        updateCartCount(index.length);
+        alert('Movie added to cart!');
+        
+    } catch (error) {
+        console.error('Failed to add to cart:', error);
+        alert('Failed to add movie to cart');
     }
+}
 
     function updateCartCount(count) {
         cartCount.textContent = count || '';
@@ -614,6 +636,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('This movie is already rented');
                 return;
             }
+
+            // Update UI when rented
+            const cartCard = document.querySelector(`.cart-card[data-movie-id="${movie.id}"]`);
+            if (cartCard) {
+                cartCard.classList.add('rented');
+                const rentButton = cartCard.querySelector('.rent-btn');
+                if (rentButton) {
+                    rentButton.textContent = 'Rented';
+                    rentButton.classList.add('rented');
+                    rentButton.disabled = true;
+                }
+            }
             
             // Store the individual movie in rented cache
             await rentedCache.put(rentedMovieKey, new Response(JSON.stringify(movie)));
@@ -628,25 +662,21 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             // Remove from cart cache
-            const cartIndexResponse = await cartCache.match('cart-index');
-            let cartIndex = cartIndexResponse ? await cartIndexResponse.json() : [];
-            cartIndex = cartIndex.filter(id => id !== movie.id);
-            await cartCache.put('cart-index', new Response(JSON.stringify(cartIndex)));
-            await cartCache.delete(`movie-${movie.id}`);
+            setTimeout(async () => {
+                const cartIndexResponse = await cartCache.match('cart-index');
+                let cartIndex = cartIndexResponse ? await cartIndexResponse.json() : [];
+                cartIndex = cartIndex.filter(id => id !== movie.id);
+                await cartCache.put('cart-index', new Response(JSON.stringify(cartIndex)));
+                await cartCache.delete(`movie-${movie.id}`);
+                
+                updateCartCount(cartIndex.length);
+                
+                // Refresh the cart display
+                const items = await loadCartItems();
+                displayCartItems(items);
+            }, 2000);
             
-            // Update cart count
-            updateCartCount(cartIndex.length);
-            
-            // Load remaining cart items and display them
-            const remainingCartItems = await loadCartItems();
-            displayCartItems(remainingCartItems);
-            
-            // Show success message
             alert(`${movie.title} has been rented!`);
-
-            // Load and display updated cart
-            const items = await loadCartItems();
-            displayCartItems(items);
 
             
         } catch (error) {
