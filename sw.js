@@ -1,11 +1,11 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = '1.0.1';
 const CACHE_NAMES = {
-    APP: 'appFiles_5',
-    CART: 'cart-items-v1', 
-    RENTED: 'rented-items-v1',
-    SEARCH: 'search-results-v1',
-    IMAGES: 'movie-images-v1',
-    DYNAMIC: 'dynamic-content-v1' 
+    APP: `app-files-${CACHE_VERSION}`,
+    CART: `cart-items-${CACHE_VERSION}`, 
+    RENTED: `rented-items-${CACHE_VERSION}`,
+    SEARCH: `search-results-${CACHE_VERSION}`,
+    IMAGES: `movie-images-${CACHE_VERSION}`,
+    DYNAMIC: `dynamic-content-${CACHE_VERSION}` 
 };
 
 const ASSETS_TO_CACHE = [
@@ -18,6 +18,9 @@ const ASSETS_TO_CACHE = [
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
 
+function getExpectedCacheNames() {
+    return Object.values(CACHE_NAMES);
+}
 
 self.addEventListener('install', event => {
     console.log('[SW] Installing...', new Date().toLocaleTimeString());
@@ -35,18 +38,27 @@ self.addEventListener('install', event => {
 
 self.addEventListener('activate', event => {
     console.log('[SW] Activating...', new Date().toLocaleTimeString());
+    
     event.waitUntil(
-        caches.keys().then(keys => {
-            console.log('[SW] Found caches:', keys);
-            return Promise.all(
-                keys.map(key => {
-                    if (!Object.values(CACHE_NAMES).includes(key)) {
-                        console.log('[SW] Deleting old cache:', key);
-                        return caches.delete(key);
-                    }
-                })
-            );
-        })
+        caches.keys()
+            .then(cacheNames => {
+                console.log('[SW] Found caches:', cacheNames);
+                
+                const expectedCacheNames = getExpectedCacheNames();
+                
+                return Promise.all(
+                    cacheNames.map(cacheName => {
+                        if (!expectedCacheNames.includes(cacheName)) {
+                            console.log('[SW] Deleting old cache:', cacheName);
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            })
+            .then(() => {
+                console.log('[SW] Claiming clients...');
+                return self.clients.claim();
+            })
     );
 });
 
