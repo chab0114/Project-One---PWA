@@ -811,6 +811,17 @@ document.addEventListener('DOMContentLoaded', () => {
             
             rentedIndex = rentedIndex.filter(id => id !== movie.id);
             await rentedCache.put('rented-index', new Response(JSON.stringify(rentedIndex)));
+
+            const searchCard = document.querySelector(`.search-card[data-movie-id="${movie.id}"]`);
+            if (searchCard) {
+                searchCard.classList.remove('rented');
+                const addButton = searchCard.querySelector('.add-to-cart-btn');
+                if (addButton) {
+                    addButton.textContent = 'Add to Cart';
+                    addButton.classList.remove('rented');
+                    addButton.disabled = false;
+                }
+            }
             
             // Reload and display the updated list
             const rentedMovies = await loadRentedItems();
