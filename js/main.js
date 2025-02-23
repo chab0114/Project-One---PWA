@@ -517,51 +517,50 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
     
-    async function addToCart(movie) {
-    try {
-        const cache = await caches.open(CACHE_NAMES.CART);
-        
-        // Check if movie exists in cart first
-        const movieKey = `movie-${movie.id}`;
-        const exists = await cache.match(movieKey);
-        
-        if (exists) {
-            alert('This movie is already in your cart');
-            return;
-        }
-        
-        // Update UI to show it's added
-        const searchCard = document.querySelector(`.search-card[data-movie-id="${movie.id}"]`);
-        if (searchCard) {
-            searchCard.classList.add('added');
-            const addButton = searchCard.querySelector('.add-to-cart-btn');
-            if (addButton) {
-                addButton.textContent = 'Added';
-                addButton.classList.add('added');
-                addButton.disabled = true;
-            }
-        }
+    const cartChannel = new BroadcastChannel('cart-updates');
 
-        // Store the individual movie
-        await cache.put(movieKey, new Response(JSON.stringify(movie)));
-        
-        // Maintain an index of IDs for listing
-        const indexResponse = await cache.match('cart-index');
-        const index = indexResponse ? await indexResponse.json() : [];
-        
-        if (!index.includes(movie.id)) {
-            index.push(movie.id);
-            await cache.put('cart-index', new Response(JSON.stringify(index)));
+    async function addToCart(movie) {
+        try {
+            const cache = await caches.open(CACHE_NAMES.CART);
+            
+            // Check if movie exists in cart first
+            const movieKey = `movie-${movie.id}`;
+            const exists = await cache.match(movieKey);
+            
+            if (exists) {
+                alert('This movie is already in your cart');
+                return;
+            }
+    
+            // Store the individual movie
+            await cache.put(movieKey, new Response(JSON.stringify(movie)));
+            
+            // Maintain an index of IDs for listing
+            const indexResponse = await cache.match('cart-index');
+            const index = indexResponse ? await indexResponse.json() : [];
+            
+            if (!index.includes(movie.id)) {
+                index.push(movie.id);
+                await cache.put('cart-index', new Response(JSON.stringify(index)));
+            }
+            
+            // Update UI in current tab
+            updateCurrentTabCartUI(movie, index.length);
+            
+            // Broadcast to other tabs
+            cartChannel.postMessage({
+                action: 'add',
+                movie: movie,
+                cartCount: index.length
+            });
+            
+            alert('Movie added to cart!');
+            
+        } catch (error) {
+            console.error('Failed to add to cart:', error);
+            alert('Failed to add movie to cart');
         }
-        
-        updateCartCount(index.length);
-        alert('Movie added to cart!');
-        
-    } catch (error) {
-        console.error('Failed to add to cart:', error);
-        alert('Failed to add movie to cart');
     }
-}
 
     function updateCartCount(count) {
         cartCount.textContent = count || '';
@@ -669,12 +668,15 @@ document.addEventListener('DOMContentLoaded', () => {
             cartIndex = cartIndex.filter(id => id !== movie.id);
             await cache.put('cart-index', new Response(JSON.stringify(cartIndex)));
             
-            // Update cart count
-            updateCartCount(cartIndex.length);
+            // Update UI in current tab
+            updateCurrentTabCartUI(movie, cartIndex.length, true);
             
-            // Load and display updated cart
-            const items = await loadCartItems();
-            displayCartItems(items);
+            // Broadcast to other tabs
+            cartChannel.postMessage({
+                action: 'remove',
+                movieId: movie.id,
+                cartCount: cartIndex.length
+            });
             
             alert(`${movie.title} has been removed from cart!`);
         } catch (error) {
@@ -682,6 +684,105 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Failed to remove movie from cart');
         }
     }
+
+    // Function to update UI in the current tab
+    function updateCurrentTabCartUI(movie, cartCount, isRemoval = false) {
+        // Update cart count
+        updateCartCount(cartCount);
+        
+        // Update search card state
+        const searchCard = document.querySelector(`.search-card[data-movie-id="${movie.id}"]`);
+        if (searchCard) {
+            if (isRemoval) {
+                searchCard.classList.remove('added');
+                const addButton = searchCard.querySelector('.add-to-cart-btn');
+                if (addButton) {
+                    addButton.textContent = 'Add to Cart';
+                    addButton.classList.remove('added');
+                    addButton.disabled = false;
+                }
+            } else {
+                searchCard.classList.add('added');
+                const addButton = searchCard.querySelector('.add-to-cart-btn');
+                if (addButton) {
+                    addButton.textContent = 'Added';
+                    addButton.classList.add('added');
+                    addButton.disabled = true;
+                }
+            }
+        }
+        
+        // If on cart screen, reload cart items
+        if (document.querySelector('.cart-screen.active')) {
+            loadCartItems().then(displayCartItems);
+        }
+    }
+
+    // Listen for cart update from other tabs
+    cartChannel.onmessage = async (event) => {
+        try {
+            switch (event.data.action) {
+                case 'add':
+                    // Update UI for added movie in other tabs
+                    updateOtherTabCartUI(event.data.movie, event.data.cartCount);
+                    break;
+                
+                case 'remove':
+                    // Update UI for removed movie in other tabs
+                    updateOtherTabRemoveUI(event.data.movieId, event.data.cartCount);
+                    break;
+            }
+        } catch (error) {
+            console.error('Error handling cart channel message:', error);
+        }
+    };
+
+    // Update UI in other tabs when a movie is added
+    function updateOtherTabCartUI(movie, cartCount) {
+        // Update cart count
+        updateCartCount(cartCount);
+        
+        // Update search card state
+        const searchCard = document.querySelector(`.search-card[data-movie-id="${movie.id}"]`);
+        if (searchCard) {
+            searchCard.classList.add('added');
+            const addButton = searchCard.querySelector('.add-to-cart-btn');
+            if (addButton) {
+                addButton.textContent = 'Added';
+                addButton.classList.add('added');
+                addButton.disabled = true;
+            }
+        }
+        
+        // If on cart screen, reload cart items
+        if (document.querySelector('.cart-screen.active')) {
+            loadCartItems().then(displayCartItems);
+        }
+    }
+    
+    // Update UI in other tabs when a movie is removed
+    function updateOtherTabRemoveUI(movieId, cartCount) {
+        // Update cart count
+        updateCartCount(cartCount);
+        
+        // Update search card state
+        const searchCard = document.querySelector(`.search-card[data-movie-id="${movieId}"]`);
+        if (searchCard) {
+            searchCard.classList.remove('added');
+            const addButton = searchCard.querySelector('.add-to-cart-btn');
+            if (addButton) {
+                addButton.textContent = 'Add to Cart';
+                addButton.classList.remove('added');
+                addButton.disabled = false;
+            }
+        }
+        
+        // If on cart screen, reload cart items
+        if (document.querySelector('.cart-screen.active')) {
+            loadCartItems().then(displayCartItems);
+        }
+    }
+    
 
     async function rentMovie(movie) {
         try {
@@ -696,7 +797,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('This movie is already rented');
                 return;
             }
-
+    
             // Update UI when rented
             const cartCard = document.querySelector(`.cart-card[data-movie-id="${movie.id}"]`);
             if (cartCard) {
@@ -708,7 +809,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     rentButton.disabled = true;
                 }
             }
-
+    
             const searchCard = document.querySelector(`.search-card[data-movie-id="${movie.id}"]`);
             if (searchCard) {
                 searchCard.classList.remove('added');
@@ -742,7 +843,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 await cartCache.put('cart-index', new Response(JSON.stringify(cartIndex)));
                 await cartCache.delete(`movie-${movie.id}`);
                 
+                // Update cart count
                 updateCartCount(cartIndex.length);
+                
+                // Broadcast cart update to other tabs
+                cartChannel.postMessage({
+                    action: 'remove',
+                    movieId: movie.id,
+                    cartCount: cartIndex.length
+                });
                 
                 // Refresh the cart display
                 const items = await loadCartItems();
@@ -750,7 +859,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2000);
             
             alert(`${movie.title} has been rented!`);
-
             
         } catch (error) {
             console.error('Failed to rent movie:', error);
