@@ -125,10 +125,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             </div>
         `;
-    
+        
+        const backButton = document.getElementById('backToRented');
+
         // Handle back button
         backButton.addEventListener('click', () => {
-            videoElement.pause();
             navigateToScreen(rentedScreen);
             rentedLink.classList.add('active');
             loadRentedItems().then(movies => displayRentedItems(movies));
@@ -563,7 +564,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateCartCount(count) {
-        cartCount.textContent = count || '';
+        const badge = document.querySelector('.cart-badge');
+        if (count && count > 0) {
+            badge.textContent = count;
+        } else {
+            badge.textContent = '';
+        }
     }
 
     async function loadCartItems() {
