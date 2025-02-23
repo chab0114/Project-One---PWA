@@ -12,16 +12,16 @@ const CACHE_NAMES = {
 
 const ASSETS_TO_CACHE = [
     '/', 
-    '/index.html',
-    '/css/main.css',
-    '/js/main.js',
-    '/manifest.json',
-    '/assets/images/placeholder.jpg',
-    '/assets/icons/favicon-16x16.png',
-    '/assets/icons/favicon-32x32.png',
-    '/assets/icons/favicon-96x96.png',
-    '/assets/icons/favicon-192x192.png',
-    '/assets/icons/favicon-512x512.png',
+    './index.html',
+    './css/main.css',
+    './js/main.js',
+    './manifest.json',
+    './assets/images/placeholder.jpg',
+    './assets/icons/favicon-16x16.png',
+    './assets/icons/favicon-32x32.png',
+    './assets/icons/favicon-96x96.png',
+    './assets/icons/favicon-192x192.png',
+    './assets/icons/favicon-512x512.png',
     'https://fonts.googleapis.com/css2?family=Playfair+Display+SC:wght@700&family=SF+Pro+Text:wght@400;500;600&family=DM+Sans:wght@400;600;700&display=swap',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css'
 ];
