@@ -1040,7 +1040,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="video-container">
                 <div class="video-wrapper">
                     <video id="moviePlayer" controls controlsList="nodownload nopictureinpicture noplaybackrate">
-                        <source src="assets/videos/placeholder.mp4" type="video/mp4">
+                        <source src="./assets/videos/placeholder.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                 </div>

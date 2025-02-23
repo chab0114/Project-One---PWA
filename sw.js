@@ -17,6 +17,7 @@ const ASSETS_TO_CACHE = [
     './js/main.js',
     './manifest.json',
     './assets/images/placeholder.jpg',
+    './assets/videos/placeholder.mp4',
     './assets/icons/favicon-16x16.png',
     './assets/icons/favicon-32x32.png',
     './assets/icons/favicon-96x96.png',
