@@ -2,13 +2,15 @@ const API_KEY = '3e7d5c5d91edd8eae1fcac9b14f3b548';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const SEARCH_ENDPOINT = '/search/movie';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p/w500';
+const CACHE_VERSION = '1.0.0';
+const CACHE_PREFIX = 'wfr';
 const CACHE_NAMES = {
-    APP: 'appFiles_5',
-    CART: 'cart-items-v1',
-    RENTED: 'rented-items-v1',
-    SEARCH: 'search-results-v1',
-    IMAGES: 'movie-images-v1',
-    DYNAMIC: 'dynamic-content-v1' 
+    APP: `${CACHE_PREFIX}-app-${CACHE_VERSION}`,
+    CART: `${CACHE_PREFIX}-cart-${CACHE_VERSION}`,
+    RENTED: `${CACHE_PREFIX}-rented-${CACHE_VERSION}`,
+    SEARCH: `${CACHE_PREFIX}-search-${CACHE_VERSION}`,
+    IMAGES: `${CACHE_PREFIX}-images-${CACHE_VERSION}`,
+    DYNAMIC: `${CACHE_PREFIX}-dynamic-${CACHE_VERSION}`
 };
 const OFFLINE_MESSAGE = 'You are offline. Showing cached results.';
 const ERROR_MESSAGE = 'Unable to fetch results. Please try again.';

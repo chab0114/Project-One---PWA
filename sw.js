@@ -1,11 +1,12 @@
-const CACHE_VERSION = '1.0.1';
+const CACHE_VERSION = '1.0.0';
+const CACHE_PREFIX = 'wfr';
 const CACHE_NAMES = {
-    APP: `app-files-${CACHE_VERSION}`,
-    CART: `cart-items-${CACHE_VERSION}`, 
-    RENTED: `rented-items-${CACHE_VERSION}`,
-    SEARCH: `search-results-${CACHE_VERSION}`,
-    IMAGES: `movie-images-${CACHE_VERSION}`,
-    DYNAMIC: `dynamic-content-${CACHE_VERSION}` 
+    APP: `${CACHE_PREFIX}-app-${CACHE_VERSION}`,
+    CART: `${CACHE_PREFIX}-cart-${CACHE_VERSION}`, 
+    RENTED: `${CACHE_PREFIX}-rented-${CACHE_VERSION}`,
+    SEARCH: `${CACHE_PREFIX}-search-${CACHE_VERSION}`,
+    IMAGES: `${CACHE_PREFIX}-images-${CACHE_VERSION}`,
+    DYNAMIC: `${CACHE_PREFIX}-dynamic-${CACHE_VERSION}` 
 };
 
 const ASSETS_TO_CACHE = [
