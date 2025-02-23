@@ -10,6 +10,7 @@ const CACHE_NAMES = {
     RENTED: `${CACHE_PREFIX}-rented-${CACHE_VERSION}`,
     SEARCH: `${CACHE_PREFIX}-search-${CACHE_VERSION}`,
     IMAGES: `${CACHE_PREFIX}-images-${CACHE_VERSION}`,
+    CURRENT_VIEW: `${CACHE_PREFIX}-current-view-${CACHE_VERSION}`,
     DYNAMIC: `${CACHE_PREFIX}-dynamic-${CACHE_VERSION}`
 };
 const OFFLINE_MESSAGE = 'You are offline. Showing cached results.';
@@ -82,10 +83,57 @@ document.addEventListener('DOMContentLoaded', () => {
         displayCartItems(items);
     });
 
-    playButton.addEventListener('click', (e) => {
+    playButton.addEventListener('click', async (e) => {
         e.preventDefault();
-        navigateToScreen(viewScreen);
+        
+        // Check if there's a current movie being watched
+        const viewCache = await caches.open(CACHE_NAMES.CURRENT_VIEW);
+        const currentMovieResponse = await viewCache.match('current-movie');
+        
+        if (currentMovieResponse) {
+            const movie = await currentMovieResponse.json();
+            // Verify movie is still in rented cache
+            const rentedCache = await caches.open(CACHE_NAMES.RENTED);
+            const movieInRented = await rentedCache.match(`movie-${movie.id}`);
+            
+            if (movieInRented) {
+                watchMovie(movie);
+                return;
+            }
+            // If movie is no longer rented, clear the current view
+            await viewCache.delete('current-movie');
+        }
+        
+        // Show empty view screen if no current movie
+        showEmptyViewScreen();
     });
+
+    function showEmptyViewScreen() {
+        navigateToScreen(viewScreen);
+        
+        viewScreen.innerHTML = `
+            <div class="back-button" id="backToRented">
+                <svg class="back-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span>Back to Rented</span>
+            </div>
+            
+            <div class="search-status">
+                <div class="status-message">
+                    <p>Select a movie from <span class="highlight">Rented</span> to watch</p>
+                </div>
+            </div>
+        `;
+    
+        // Handle back button
+        backButton.addEventListener('click', () => {
+            videoElement.pause();
+            navigateToScreen(rentedScreen);
+            rentedLink.classList.add('active');
+            loadRentedItems().then(movies => displayRentedItems(movies));
+        });
+    }
 
     async function displayResults(movies, searchQuery, isOffline = false) {
         const searchStatus = document.querySelector('.search-status');    
@@ -836,20 +884,94 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function watchMovie(movie) {
-        navigateToScreen(viewScreen);
+    async function watchMovie(movie) {
+        // First check if movie is still in rented cache
+        const rentedCache = await caches.open(CACHE_NAMES.RENTED);
+        const movieInCache = await rentedCache.match(`movie-${movie.id}`);
+        
+        if (!movieInCache) {
+            alert('This movie is no longer in your rented list');
+            navigateToScreen(rentedScreen);
+            const rentedMovies = await loadRentedItems();
+            displayRentedItems(rentedMovies);
+            return;
+        }
     
+        // Store current movie in view cache
+        const viewCache = await caches.open(CACHE_NAMES.CURRENT_VIEW);
+        await viewCache.put('current-movie', new Response(JSON.stringify(movie)));
+    
+        showVideoScreen(movie);
+    }
+
+    async function showVideoScreen(movie) {
+        navigateToScreen(viewScreen);
+        
         viewScreen.innerHTML = `
-            <div class="view-movie-container">
-                <h2>${movie.title}</h2>
-                <video controls>
-                    <source src="assets/videos/placeholder.mp4" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-                <button class="btn btn-primary mark-watched-btn">Mark as Watched</button>
+            <div class="back-button" id="backToRented">
+                <svg class="back-arrow" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                <span>Back to Rented</span>
+            </div>
+            
+            <div class="search-status">
+                <div class="status-message">
+                    <p>Now watching <span class="highlight">${movie.title}</span></p>
+                </div>
+            </div>
+            
+            <div class="video-container">
+                <div class="video-wrapper">
+                    <video id="moviePlayer" controls controlsList="nodownload nopictureinpicture noplaybackrate">
+                        <source src="assets/videos/placeholder.mp4" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video>
+                </div>
+                <button class="btn btn-primary" id="markAsWatched">Mark as Watched</button>
             </div>
         `;
+    
+        const videoElement = document.getElementById('moviePlayer');
+        const backButton = document.getElementById('backToRented');
+        const markAsWatchedBtn = document.getElementById('markAsWatched');
+    
+        // Screen orientation handler
+        if (window.screen && window.screen.orientation) {
+            window.screen.orientation.addEventListener('change', (e) => {
+                if (e.target.type.includes('landscape')) {
+                    videoElement.requestFullscreen();
+                }
+            });
+        }
+    
+        // Back button handler
+        const handleBack = async () => {
+            videoElement.pause();
+            navigateToScreen(rentedScreen);
+            rentedLink.classList.add('active');
+            const rentedMovies = await loadRentedItems();
+            displayRentedItems(rentedMovies);
+        };
+    
+        backButton.replaceWith(backButton.cloneNode(true));
+        const newBackButton = document.getElementById('backToRented');
+        newBackButton.addEventListener('click', handleBack);
+    
+        // Handle mark as watched button
+        markAsWatchedBtn.addEventListener('click', async () => {
+            // Clear current view cache when marking as watched
+            const viewCache = await caches.open(CACHE_NAMES.CURRENT_VIEW);
+            await viewCache.delete('current-movie');
+            await returnMovie(movie);
+            navigateToScreen(rentedScreen);
+            rentedLink.classList.add('active');
+            const rentedMovies = await loadRentedItems();
+            displayRentedItems(rentedMovies);
+        });
     }
+
+
 });
 
 

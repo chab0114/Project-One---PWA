@@ -6,7 +6,8 @@ const CACHE_NAMES = {
     RENTED: `${CACHE_PREFIX}-rented-${CACHE_VERSION}`,
     SEARCH: `${CACHE_PREFIX}-search-${CACHE_VERSION}`,
     IMAGES: `${CACHE_PREFIX}-images-${CACHE_VERSION}`,
-    DYNAMIC: `${CACHE_PREFIX}-dynamic-${CACHE_VERSION}` 
+    DYNAMIC: `${CACHE_PREFIX}-dynamic-${CACHE_VERSION}`,
+    CURRENT_VIEW: `${CACHE_PREFIX}-current-view-${CACHE_VERSION}`
 };
 
 const ASSETS_TO_CACHE = [

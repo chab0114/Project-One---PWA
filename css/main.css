@@ -389,6 +389,94 @@ body {
   color: var(--text-color);
 }
 
+/* View Screen */
+.view-screen {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.video-container {
+  position: relative;
+  background: white;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  padding: 1rem;
+  box-shadow: var(--card-shadow);
+}
+
+.video-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.video-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  background: black;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.video-wrapper video {
+  width: 100%;
+  max-height: 70vh;
+  display: block;
+}
+
+.video-wrapper.fullscreen video {
+  max-height: none;
+  height: 100vh;
+}
+
+.controls-container {
+  margin-top: 1rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+/*Video PLayer*/
+.view-screen {
+  padding: 1rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.video-container {
+  margin-top: 1rem;
+}
+
+.video-wrapper {
+  width: 100%;
+  background: black;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin-bottom: 1rem;
+}
+
+.video-wrapper video {
+  width: 100%;
+  display: block;
+}
+
+
+.error-message {
+    background: rgba(255, 0, 0, 0.8);
+    color: white;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+}
+
 /* Cart and Rented Cards */
 .cart-card,
 .rented-card {
@@ -545,5 +633,17 @@ body {
   .search-card {
     max-width: 800px;
     margin: 1rem auto;
+  }
+}
+
+@media screen and (orientation: landscape) {
+  .video-wrapper.fullscreen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 9999;
+      border-radius: 0;
   }
 }
