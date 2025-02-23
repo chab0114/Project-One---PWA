@@ -326,6 +326,23 @@ body {
   pointer-events: none;
 }
 
+.home-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 2rem 0;
+}
+
+.small-image {
+  width: 300px; 
+  height: auto;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  margin: 10px;
+}
+
+
 /* Search Results Cards */
 .search-results {
   display: flex;
