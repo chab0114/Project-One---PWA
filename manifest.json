@@ -27,6 +27,21 @@
             "type": "image/png"
         }
     ],
+    "screenshots": [
+        {
+            "src": "./assets/screenshots/desktop.png",
+            "sizes": "1280x720",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "Homescreen of WheatFlix"
+        },
+        {
+            "src": "./assets/screenshots/mobile.png",
+            "sizes": "390x844",
+            "type": "image/png",
+            "label": "Mobile homescreen"
+        }
+    ],
     "theme_color": "#1f2937",
     "background_color": "#f9f9f6",
     "orientation": "any"

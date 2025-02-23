@@ -18,7 +18,9 @@ const ERROR_MESSAGE = 'Unable to fetch results. Please try again.';
 
 document.addEventListener('DOMContentLoaded', () => {
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('./sw.js', {
+            scope: './'
+        })
         .then(() => console.log('Service Worker registered successfully.'))
         .catch(error => console.error('Service Worker registration failed:', error));
     }
