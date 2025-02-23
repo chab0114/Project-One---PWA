@@ -94,10 +94,23 @@ body {
   height: var(--nav-height);
   padding: 1rem;
   display: flex;
-  justify-content: space-between;
   align-items: center;
   width: 100%;
   z-index: 1000;
+}
+
+.nav-items-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  margin: 0 auto;
+  max-width: 500px;
+}
+
+.logo {
+  position: absolute;
+  left: 1rem;
 }
 
 .nav-item {
@@ -175,7 +188,21 @@ body {
 }
 
 /* Search Form */
+.search-container {
+  display: flex;
+  justify-content: center;
+}
+
+.search-container,
+.search-status,
+.search-card {
+    width: calc(100% - 2rem);
+    max-width: 800px;
+    margin: 1rem auto;
+}
+
 .search-form {
+  width: 100%;
   display: flex;
   align-items: center;
   background-color: var(--search-bg);
@@ -230,6 +257,14 @@ body {
   text-align: center;
 }
 
+.search-container,
+.search-status,
+.search-card {
+    width: calc(100% - 2rem);
+    max-width: 800px;
+    margin: 1rem auto;
+}
+
 .status-message p {
   font-family: var(--font-secondary);
   font-size: 1.5rem;
@@ -266,6 +301,13 @@ body {
 }
 
 /* Search Results Cards */
+.search-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+}
+
 .search-card {
   display: flex;
   background: white;
@@ -492,12 +534,12 @@ body {
 /* Cart and Rented Cards */
 .cart-card,
 .rented-card {
-  width: min(370px, calc(100% - 2rem));
-  background: white;
-  border-radius: 0.75rem;
-  overflow: hidden;
-  margin: 1rem auto;
-  box-shadow: var(--card-shadow);
+    width: min(370px, calc(100% - 2rem));
+    background: white;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    margin: 0;
+    box-shadow: var(--card-shadow);
 }
 
 .cart-card-image-container,
@@ -562,11 +604,12 @@ body {
 
 .cart-items,
 .rented-items {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1rem;
-  width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    width: 100%;
+    gap: 1rem;
 }
 
 .cart-card.rented {
@@ -661,6 +704,33 @@ body {
 
   .search-card {
     margin: 0.5rem;
+  }
+}
+
+@media screen and (min-width: 48rem) { 
+  .cart-items,
+  .rented-items {
+      flex-direction: row;
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 1200px;
+      margin: 0 auto;
+      gap: 2rem;
+  }
+
+  .cart-card,
+  .rented-card {
+      width: calc(50% - 2rem);
+      max-width: 370px;
+      margin: 0;
+  }
+}
+
+@media screen and (min-width: 90rem) {
+  .cart-items,
+  .rented-items {
+      max-width: 1600px;
+      padding: 2rem;
   }
 }
 
